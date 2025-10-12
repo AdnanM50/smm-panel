@@ -324,3 +324,39 @@
     color: #f43f5e !important;
   }
 }
+
+/* Hide scrollbars across all browsers */
+.scrollbar-hide {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE and Edge */
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+}
+
+/* Additional comprehensive scrollbar hiding for platform scroll containers */
+#platform-scroll {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE and Edge */
+  -ms-overflow-style: none;
+}
+
+#platform-scroll::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+#platform-scroll::-webkit-scrollbar-track {
+  display: none;
+}
+
+#platform-scroll::-webkit-scrollbar-thumb {
+  display: none;
+}

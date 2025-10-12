@@ -4,9 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-// import { Checkbox } from "@/components/ui/checkbox"
+import Image from "next/image"
 import {
   TrendingUp,
   Menu,
@@ -31,11 +29,9 @@ import {
   CreditCard,
   Headphones,
 } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [loginData, setLoginData] = useState({ username: "", password: "", remember: false })
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
 
   return (
@@ -138,34 +134,34 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 lg:px-8">
+      <section className="pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 lg:px-8">
         <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="space-y-8">
-              <div className="inline-block px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full">
-                <span className="text-orange-400 text-sm font-medium">
+            <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
+              <div className="inline-block px-3 sm:px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full">
+                <span className="text-orange-400 text-xs sm:text-sm font-medium">
                   🏆 World's #1 Cheapest SMM Panel - Since 2020
                 </span>
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
                 Grow Your Social Media{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
                   Instantly
                 </span>
               </h1>
 
-              <p className="text-lg text-slate-300 leading-relaxed">
+              <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
                 Boost your social media presence with our premium SMM services. Get real followers, likes, views, and
                 engagement across all major platforms at unbeatable prices.
               </p>
 
-              <div className="flex flex-wrap gap-4">
-                <Link href="/signup">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Link href="/signup" className="w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+                    className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
                   >
                     Get Started Free
                     <ArrowRight className="ml-2 w-5 h-5" />
@@ -174,117 +170,92 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-slate-700 text-white hover:bg-slate-800 bg-transparent"
+                  className="w-full sm:w-auto border-slate-700 text-white hover:bg-slate-800 bg-transparent"
                 >
                   View Services
                 </Button>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-6 pt-8">
-                <div>
-                  <div className="text-3xl font-bold text-orange-400">500K+</div>
-                  <div className="text-sm text-slate-400">Active Users</div>
+              <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8">
+                <div className="text-center sm:text-left">
+                  <div className="text-2xl sm:text-3xl font-bold text-orange-400">500K+</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Active Users</div>
                 </div>
-                <div>
-                  <div className="text-3xl font-bold text-orange-400">10M+</div>
-                  <div className="text-sm text-slate-400">Orders Completed</div>
+                <div className="text-center sm:text-left">
+                  <div className="text-2xl sm:text-3xl font-bold text-orange-400">10M+</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Orders Completed</div>
                 </div>
-                <div>
-                  <div className="text-3xl font-bold text-orange-400">24/7</div>
-                  <div className="text-sm text-slate-400">Support</div>
+                <div className="text-center sm:text-left">
+                  <div className="text-2xl sm:text-3xl font-bold text-orange-400">24/7</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Support</div>
                 </div>
               </div>
             </div>
 
-            {/* Right - Login Form */}
-            <Card className="bg-slate-900/80 backdrop-blur-lg border-slate-800/50 p-8">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Account Sign In</h2>
-                <p className="text-slate-400">Access your dashboard</p>
+            {/* Right - Hero Image */}
+            <div className="relative order-1 lg:order-2">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/3d-illustration-of-person-using-smartphone-with-so.jpg"
+                  alt="Social Media Growth Illustration"
+                  width={600}
+                  height={600}
+                  className="w-full h-auto"
+                  priority
+                />
+                {/* Gradient overlay for better integration */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/20 to-transparent pointer-events-none" />
               </div>
 
-              <form className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-white">
-                    Username or Email
-                  </Label>
-                  <Input
-                    id="username"
-                    placeholder="Enter your username"
-                    value={loginData.username}
-                    onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">
-                    Password
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="remember"
-                      checked={loginData.remember}
-                      onCheckedChange={(checked) => setLoginData({ ...loginData, remember: checked as boolean })}
-                    />
-                    <Label htmlFor="remember" className="text-sm text-slate-300 cursor-pointer">
-                      Remember Me
-                    </Label>
+              {/* Floating stats cards - Responsive positioning */}
+              <div className="absolute -bottom-3 sm:-bottom-6 -left-3 sm:-left-6 bg-slate-900/90 backdrop-blur-lg border border-slate-800 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-xl">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-green-600 to-green-400 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <Link href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300">
-                    Forgot Password?
-                  </Link>
+                  <div>
+                    <div className="text-lg sm:text-2xl font-bold text-white">+250%</div>
+                    <div className="text-xs text-slate-400">Growth Rate</div>
+                  </div>
                 </div>
+              </div>
 
-                <Link href="/dashboard">
-                  <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white">
-                    Sign In
-                  </Button>
-                </Link>
-
-                <div className="text-center text-sm text-slate-400">
-                  Don't have an account?{" "}
-                  <Link href="/signup" className="text-orange-400 hover:text-orange-300 font-medium">
-                    Sign Up
-                  </Link>
+              <div className="absolute -top-3 sm:-top-6 -right-3 sm:-right-6 bg-slate-900/90 backdrop-blur-lg border border-slate-800 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-xl">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-orange-600 to-orange-400 flex items-center justify-center">
+                    <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-lg sm:text-2xl font-bold text-white">500K+</div>
+                    <div className="text-xs text-slate-400">Happy Clients</div>
+                  </div>
                 </div>
-              </form>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Trust Badges */}
-      <section className="py-12 px-4 lg:px-8 border-y border-slate-800/50">
+      <section className="py-8 sm:py-12 px-4 lg:px-8 border-y border-slate-800/50">
         <div className="container mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60">
-            <div className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-green-400" />
-              <span className="text-slate-300">SSL Secured</span>
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-4 sm:gap-8 opacity-60">
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+              <span className="text-slate-300 text-sm sm:text-base">SSL Secured</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Lock className="w-6 h-6 text-blue-400" />
-              <span className="text-slate-300">100% Safe</span>
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+              <span className="text-slate-300 text-sm sm:text-base">100% Safe</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-6 h-6 text-purple-400" />
-              <span className="text-slate-300">Secure Payment</span>
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+              <span className="text-slate-300 text-sm sm:text-base">Secure Payment</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Headphones className="w-6 h-6 text-orange-400" />
-              <span className="text-slate-300">24/7 Support</span>
+            <div className="flex items-center gap-2 justify-center sm:justify-start">
+              <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
+              <span className="text-slate-300 text-sm sm:text-base">24/7 Support</span>
             </div>
           </div>
         </div>

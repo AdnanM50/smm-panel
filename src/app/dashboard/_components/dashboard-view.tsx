@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,18 +41,68 @@ const platforms = [
 export function DashboardView({ onNavigate }: DashboardViewProps) {
   const [activePlatform, setActivePlatform] = useState("all")
   const [platformScroll, setPlatformScroll] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isManualScrolling, setIsManualScrolling] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const animationRef = useRef<number>()
+
+  // Auto-scroll animation
+  useEffect(() => {
+    const startAutoScroll = () => {
+      if (isHovered || isManualScrolling || !scrollContainerRef.current) return
+
+      const container = scrollContainerRef.current
+      const scrollStep = 0.5 // pixels per frame (slower for smoother effect)
+
+      const animate = () => {
+        if (isHovered || isManualScrolling) {
+          animationRef.current = requestAnimationFrame(animate)
+          return
+        }
+
+        container.scrollLeft += scrollStep
+
+        // Calculate the width of one set of platforms
+        const singleSetWidth = container.scrollWidth / 2
+        
+        // If we've scrolled past the first set, reset to beginning
+        if (container.scrollLeft >= singleSetWidth) {
+          container.scrollLeft = 0
+        }
+
+        animationRef.current = requestAnimationFrame(animate)
+      }
+
+      animate()
+    }
+
+    startAutoScroll()
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+    }
+  }, [isHovered, isManualScrolling])
+
+  // Reset manual scrolling state after a delay
+  useEffect(() => {
+    if (isManualScrolling) {
+      const timer = setTimeout(() => {
+        setIsManualScrolling(false)
+      }, 2000) // Resume auto-scroll after 2 seconds
+      return () => clearTimeout(timer)
+    }
+  }, [isManualScrolling])
 
   const scrollPlatforms = (direction: "left" | "right") => {
-    const container = document.getElementById("platform-scroll")
-    if (container) {
+    setIsManualScrolling(true)
+    if (scrollContainerRef.current) {
       const scrollAmount = 200
-      const newScroll =
-        direction === "left"
-          ? Math.max(0, platformScroll - scrollAmount)
-          : Math.min(container.scrollWidth - container.clientWidth, platformScroll + scrollAmount)
-
-      container.scrollTo({ left: newScroll, behavior: "smooth" })
-      setPlatformScroll(newScroll)
+      scrollContainerRef.current.scrollBy({ 
+        left: direction === "left" ? -scrollAmount : scrollAmount, 
+        behavior: "smooth" 
+      })
     }
   }
 
@@ -125,13 +175,17 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           </Button>
 
           <div
+            ref={scrollContainerRef}
             id="platform-scroll"
             className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
-            {platforms.map((platform) => (
+            {/* Duplicate platforms for seamless infinite scroll */}
+            {[...platforms, ...platforms].map((platform, index) => (
               <button
-                key={platform.id}
+                key={`${platform.id}-${index}`}
                 onClick={() => setActivePlatform(platform.id)}
                 className={cn(
                   "shrink-0 px-4 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2",
@@ -278,3 +332,4 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
     </div>
   )
 }
+

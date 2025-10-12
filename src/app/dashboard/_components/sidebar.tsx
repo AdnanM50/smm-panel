@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Logo, LogoIcon } from "@/components/ui/logo"
 import { CirclePlus, LayoutGrid, ShoppingBag, Layers, Wallet, Ticket, Code2, X, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -14,6 +15,7 @@ interface SidebarProps {
 }
 
 const menuItems = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutGrid, badge: null, href: "/dashboard" },
   { id: "new-order", label: "New order", icon: CirclePlus, badge: null, href: "/dashboard/new-order" },
   { id: "services", label: "Services", icon: LayoutGrid, badge: null, href: "/dashboard/services" },
   { id: "orders", label: "Orders", icon: ShoppingBag, badge: null, href: "/dashboard/orders" },
@@ -44,25 +46,10 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
         <div className="p-4 border-b border-slate-800/50">
           <div className={cn("flex items-center mb-6", isCollapsed ? "justify-center" : "justify-between")}>
             {!isCollapsed && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <img
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-w4L1ns0xC5gHueV26l0eyMZvWOJVL5.png"
-                    alt="Logo"
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
-                <span className="font-bold text-lg text-white">BEST SMM</span>
-              </div>
+              <Logo size="md" showText={true} />
             )}
             {isCollapsed && (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                <img
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-w4L1ns0xC5gHueV26l0eyMZvWOJVL5.png"
-                  alt="Logo"
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
+              <LogoIcon size="md" />
             )}
             <button
               onClick={onToggle}
@@ -109,7 +96,7 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href || (pathname === "/dashboard" && item.id === "new-order")
+            const isActive = pathname === item.href
 
             return (
               <Link

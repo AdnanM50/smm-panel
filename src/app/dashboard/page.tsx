@@ -2,9 +2,17 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CirclePlus, Layers, Wallet, TrendingUp, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  CirclePlus,
+  Layers,
+  Wallet,
+  TrendingUp,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
 const platforms = [
   { id: "all", label: "All", icon: "•••" },
@@ -21,6 +29,41 @@ const platforms = [
 
 export default function DashboardPage() {
   const [activePlatform, setActivePlatform] = useState("all")
+  const [isHovered, setIsHovered] = useState(false)
+  const [isManualScrolling, setIsManualScrolling] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Infinite auto-scroll animation
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const scrollSpeed = 0.5 // pixels per frame for smooth movement
+    let frame: number
+
+    const animate = () => {
+      if (!isHovered && !isManualScrolling) {
+        container.scrollLeft += scrollSpeed
+        const totalWidth = container.scrollWidth / 2
+        if (container.scrollLeft >= totalWidth) {
+          container.scrollLeft = 0 // reset scroll for infinite effect
+        }
+      }
+      frame = requestAnimationFrame(animate)
+    }
+
+    frame = requestAnimationFrame(animate)
+
+    return () => cancelAnimationFrame(frame)
+  }, [isHovered, isManualScrolling])
+
+  // Reset manual scroll after delay
+  useEffect(() => {
+    if (isManualScrolling) {
+      const timer = setTimeout(() => setIsManualScrolling(false), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [isManualScrolling])
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
@@ -58,7 +101,10 @@ export default function DashboardPage() {
               </p>
               <p className="text-xs text-blue-400 mb-2">Next Level: FREQUENT</p>
               <div className="w-full bg-blue-950/50 rounded-full h-2 mb-2">
-                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: "5%" }} />
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                  style={{ width: "5%" }}
+                />
               </div>
               <p className="text-xs text-blue-300">5% Progress</p>
             </div>
@@ -76,18 +122,27 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              const container = document.getElementById("platform-scroll")
-              if (container) container.scrollBy({ left: -200, behavior: "smooth" })
+              setIsManualScrolling(true)
+              if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollBy({ left: -300, behavior: "smooth" })
+              }
             }}
             className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <div id="platform-scroll" className="flex-1 flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth">
-            {platforms.map((platform) => (
+          <div
+            ref={scrollContainerRef}
+            id="platform-scroll"
+            className="flex-1 flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {/* Duplicate for infinite loop */}
+            {[...platforms, ...platforms].map((platform, index) => (
               <button
-                key={platform.id}
+                key={`${platform.id}-${index}`}
                 onClick={() => setActivePlatform(platform.id)}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all font-medium",
@@ -104,8 +159,10 @@ export default function DashboardPage() {
 
           <button
             onClick={() => {
-              const container = document.getElementById("platform-scroll")
-              if (container) container.scrollBy({ left: 200, behavior: "smooth" })
+              setIsManualScrolling(true)
+              if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" })
+              }
             }}
             className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
           >
@@ -150,7 +207,9 @@ export default function DashboardPage() {
         <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800/50">
           <div className="p-6">
             <div className="flex gap-2 mb-6">
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold">Statistics</Button>
+              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                Statistics
+              </Button>
               <Button
                 variant="outline"
                 className="flex-1 bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-white font-semibold relative"
