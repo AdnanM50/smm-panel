@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/context/theme-provider"
+import { useAuth } from "@/context/AuthContext"
+import { toast } from "sonner"
 
 
 interface HeaderProps {
@@ -37,7 +39,17 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar, isCollapsed, onToggleCollapse }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
+  const { user, logout } = useAuth()
   const router = useRouter()
+
+  const handleLogout = () => {
+    logout()
+    toast.success('Logged out successfully!')
+    // Small delay to show the toast before redirecting
+    setTimeout(() => {
+      router.push('/login')
+    }, 1000)
+  }
 
   return (
     <header
@@ -97,7 +109,7 @@ export function Header({ onToggleSidebar, isCollapsed, onToggleCollapse }: Heade
             <button className="flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-all group">
               <Avatar className="w-7 h-7 md:w-8 md:h-8 border-2 border-blue-500/50">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-semibold text-xs md:text-sm">
-                  S
+                  {user?.name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-slate-400 group-hover:text-white transition-colors" />
@@ -106,10 +118,10 @@ export function Header({ onToggleSidebar, isCollapsed, onToggleCollapse }: Heade
           <DropdownMenuContent className="w-56 bg-slate-900 border-slate-800" align="end">
             <div className="px-3 py-2 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-white">shoaibsanto</span>
+                <span className="text-sm font-semibold text-white">{user?.username || user?.name || 'User'}</span>
                 <CheckCircle className="w-4 h-4 text-blue-500" />
               </div>
-              <span className="text-xs text-slate-400">JUNIOR</span>
+              <span className="text-xs text-slate-400">{user?.email}</span>
             </div>
             <DropdownMenuItem onClick={toggleTheme} className="flex items-center gap-2 cursor-pointer">
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -140,7 +152,7 @@ export function Header({ onToggleSidebar, isCollapsed, onToggleCollapse }: Heade
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-slate-800" />
             <DropdownMenuItem
-              onClick={() => router.push("/login")}
+              onClick={handleLogout}
               className="flex items-center gap-2 cursor-pointer text-red-400 focus:text-red-400"
             >
               <LogOut className="w-4 h-4" />

@@ -10,16 +10,41 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TrendingUp, Mail, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { OTPModal } from "@/components/otp-modal"
+import { useAuth } from "@/context/AuthContext"
+import { toast } from "sonner"
 
 export default function ForgotPasswordPage() {
+  const { verifyEmail } = useAuth()
   const [email, setEmail] = useState("")
   const [showOTPModal, setShowOTPModal] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitted(true)
-    setShowOTPModal(true)
+    
+    if (!email) {
+      toast.error('Please enter your email address')
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const result = await verifyEmail(email)
+      
+      if (result.success) {
+        toast.success(result.message)
+        setIsSubmitted(true)
+        setShowOTPModal(true)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -65,8 +90,9 @@ export default function ForgotPasswordPage() {
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white h-11"
+                  disabled={isSubmitting}
                 >
-                  Send Reset Code
+                  {isSubmitting ? 'Sending...' : 'Send Reset Code'}
                 </Button>
               </form>
             </>

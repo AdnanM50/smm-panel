@@ -7,6 +7,7 @@ import { Logo, LogoIcon } from "@/components/ui/logo"
 import { CirclePlus, LayoutGrid, ShoppingBag, Layers, Wallet, Ticket, Code2, X, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
 
 interface SidebarProps {
   isOpen: boolean
@@ -27,6 +28,10 @@ const menuItems = [
 
 export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
+  const { user } = useAuth()
+
+  // Debug: Log user data
+  console.log('Sidebar user data:', user)
 
   return (
     <>
@@ -66,15 +71,17 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
             >
               <Avatar className="w-10 h-10 border-2 border-blue-500/50">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-semibold">
-                  S
+                  {user?.name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white">shoaibsanto</span>
+                  <span className="text-xs sm:text-sm font-semibold text-white" title={user?.email || 'Loading...'}>
+                    {user?.email ? (user.email.length > 15 ? user.email.substring(0, 15) + '...' : user.email) : 'Loading...'}
+                  </span>
                   <CheckCircle className="w-4 h-4 text-blue-500" />
                 </div>
-                <span className="text-xs text-slate-400">JUNIOR</span>
+                <span className="text-xs text-slate-400">{user?.username || 'USER'}</span>
               </div>
             </Link>
           )}
@@ -85,7 +92,7 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
             >
               <Avatar className="w-10 h-10 border-2 border-blue-500/50">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-semibold">
-                  S
+                  {user?.name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Link>

@@ -3,6 +3,8 @@ import { Suspense } from "react"
 
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-provider";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "sonner";
 
 
 export const metadata: Metadata = {
@@ -19,7 +21,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans `}>
         <Suspense fallback={null}>
-          <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
+          <ThemeProvider defaultTheme="dark">
+            <AuthProvider>
+              {children}
+              <Toaster 
+                theme="dark" 
+                position="top-right"
+                richColors
+              />
+            </AuthProvider>
+          </ThemeProvider>
         </Suspense>
         {/* <Analytics /> */}
       </body>

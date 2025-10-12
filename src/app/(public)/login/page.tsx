@@ -11,19 +11,47 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TrendingUp, Eye, EyeOff, Mail, Lock } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     remember: false,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    router.push("/dashboard")
+    
+    if (!formData.email || !formData.password) {
+      toast.error('Please fill in all fields')
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const result = await login(formData.email, formData.password)
+      
+      if (result.success) {
+        toast.success(result.message || 'Login successful!')
+        // Small delay to show the toast before redirecting
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 1000)
+      } else {
+        toast.error(result.message || 'Login failed. Please try again.')
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -106,8 +134,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white h-11"
+              disabled={isSubmitting}
             >
-              Sign In
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
@@ -118,6 +147,7 @@ export default function LoginPage() {
             </Link>
           </div>
         </Card>
+
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm text-slate-400 hover:text-slate-300 inline-flex items-center gap-2">

@@ -11,12 +11,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TrendingUp, Eye, EyeOff, User, Mail, Lock } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { toast } from "sonner"
 
 export default function SignupPage() {
   const router = useRouter()
+  const { signup } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
+    name: "",
     username: "",
     email: "",
     password: "",
@@ -24,17 +29,60 @@ export default function SignupPage() {
     agreeToTerms: false,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const validateForm = () => {
+    if (!formData.name || !formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+      toast.error('Please fill in all fields')
+      return false
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match")
-      return
+      toast.error('Passwords do not match')
+      return false
     }
+
+    if (formData.password.length < 4) {
+      toast.error('Password must be at least 4 characters long')
+      return false
+    }
+
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
-      return
+      toast.error('Please agree to the terms and conditions')
+      return false
     }
-    router.push("/dashboard")
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address')
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) return
+
+    setIsSubmitting(true)
+    
+    try {
+      const result = await signup(formData.email, formData.username, formData.name, formData.password)
+      
+      if (result.success) {
+        toast.success(result.message || 'Registration completed successfully!')
+        // Small delay to show the toast before redirecting
+        setTimeout(() => {
+          router.push("/login")
+        }, 1500)
+      } else {
+        toast.error(result.message || 'Registration failed. Please try again.')
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -55,6 +103,24 @@ export default function SignupPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-white">
+                Full Name
+              </Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 pl-10"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="username" className="text-white">
                 Username
@@ -163,8 +229,9 @@ export default function SignupPage() {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white h-11"
+              disabled={isSubmitting}
             >
-              Create Account
+              {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 

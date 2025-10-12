@@ -13,6 +13,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { toast } from "sonner"
 
 const platforms = [
   { id: "all", label: "All", icon: "•••" },
@@ -28,10 +30,27 @@ const platforms = [
 ]
 
 export default function DashboardPage() {
+  const { user, fetchProfileDetails } = useAuth()
   const [activePlatform, setActivePlatform] = useState("all")
   const [isHovered, setIsHovered] = useState(false)
   const [isManualScrolling, setIsManualScrolling] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Debug: Log user data
+  console.log('Dashboard user data:', user)
+
+  const handleRefreshProfile = async () => {
+    try {
+      const result = await fetchProfileDetails()
+      if (result.success) {
+        toast.success('Profile updated successfully!')
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('Failed to refresh profile')
+    }
+  }
 
   // Infinite auto-scroll animation
   useEffect(() => {
@@ -73,7 +92,7 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm text-teal-300 mb-1">Current Balance</p>
-              <h3 className="text-3xl font-bold text-white">$15.87007</h3>
+              <h3 className="text-3xl font-bold text-white">${user?.balance?.toFixed(5) || '0.00000'}</h3>
             </div>
             <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
               <Wallet className="w-6 h-6 text-teal-400" />
@@ -85,7 +104,7 @@ export default function DashboardPage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-sm text-purple-300 mb-1">Total Spending</p>
-              <h3 className="text-3xl font-bold text-white">$249.77993</h3>
+              <h3 className="text-3xl font-bold text-white">${user?.totalSpent?.toFixed(5) || '0.00000'}</h3>
             </div>
             <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-purple-400" />
@@ -227,9 +246,28 @@ export default function DashboardPage() {
                   <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center">
                     <span className="text-blue-400 font-semibold">👤</span>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Username</p>
-                    <p className="text-sm font-semibold text-white">shoaibsanto</p>
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-400">Full Name</p>
+                    <p className="text-sm font-semibold text-white">{user?.name || 'Loading...'}</p>
+                  </div>
+                  <button
+                    onClick={handleRefreshProfile}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                    title="Refresh profile data"
+                  >
+                    🔄
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-600/20 flex items-center justify-center">
+                    <span className="text-green-400 font-semibold">📧</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-400">Email Address</p>
+                    <p className="text-xs sm:text-sm font-semibold text-white truncate" title={user?.email || 'Loading...'}>{user?.email || 'Loading...'}</p>
                   </div>
                 </div>
               </div>

@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckCircle, Shield, Mail, Eye, EyeOff } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 export function AccountView() {
   const [activeTab, setActiveTab] = useState<"general" | "notifications">("general")
   const [gender, setGender] = useState<"male" | "female">("male")
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const { user } = useAuth()
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   return (
@@ -60,12 +62,12 @@ export function AccountView() {
               </div>
               <div>
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <h3 className="text-xl font-bold text-white">shoaibsanto</h3>
+                  <h3 className="text-xl font-bold text-white">{user?.name}</h3>
                   <CheckCircle className="w-5 h-5 text-blue-500" />
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
                   <Mail className="w-4 h-4" />
-                  <span>santosarker00@gmail.com</span>
+                  <span>{user?.email}</span>
                 </div>
               </div>
 
