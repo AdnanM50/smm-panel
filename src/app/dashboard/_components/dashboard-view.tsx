@@ -44,7 +44,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isManualScrolling, setIsManualScrolling] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | undefined>(undefined)
 
   // Auto-scroll animation
   useEffect(() => {
