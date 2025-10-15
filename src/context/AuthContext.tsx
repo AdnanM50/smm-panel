@@ -44,6 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        if (typeof window === "undefined") {
+          setIsLoading(false)
+          return
+        }
+        
         const storedToken = localStorage.getItem('auth_token')
         const storedUser = localStorage.getItem('auth_user')
         
@@ -79,17 +84,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
 
               setUser(updatedUser)
-              localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+              if (typeof window !== "undefined") {
+                localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+              }
             }
           } catch (profileError) {
             console.error('Error fetching profile details on init:', profileError)
           }
+        } else {
+          // No stored auth data, user is not authenticated
+          setUser(null)
+          setToken(null)
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
         // Clear invalid data
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('auth_user')
+        if (typeof window !== "undefined") {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('auth_user')
+        }
+        setUser(null)
+        setToken(null)
       } finally {
         setIsLoading(false)
       }
@@ -135,8 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData)
         
         // Persist to localStorage
-        localStorage.setItem('auth_token', authToken)
-        localStorage.setItem('auth_user', JSON.stringify(userData))
+        if (typeof window !== "undefined") {
+          localStorage.setItem('auth_token', authToken)
+          localStorage.setItem('auth_user', JSON.stringify(userData))
+        }
 
         // Fetch detailed profile information after login
         await fetchProfileDetails()
@@ -217,7 +234,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUser(updatedUser)
-        localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+        if (typeof window !== "undefined") {
+          localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+        }
 
         return { success: true, message: 'Profile details updated successfully' }
       } else {
@@ -299,11 +318,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setToken(null)
     // Clear all auth-related data from localStorage
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_user')
-    // Clear any other potential auth data
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    if (typeof window !== "undefined") {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      // Clear any other potential auth data
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    }
   }
 
   const value: AuthContextType = {

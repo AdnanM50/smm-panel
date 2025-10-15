@@ -3,13 +3,12 @@ import { Suspense } from "react"
 
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-provider";
-import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "sonner";
 
 
 export const metadata: Metadata = {
-  title: "Google Index Checker",
-  description: "Check if your website is indexed by Google.",
+  title: "BEST SMM - Professional SMM Panel",
+  description: "Professional SMM Panel for social media marketing services.",
 };
 
 export default function RootLayout({
@@ -19,17 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans `}>
+      <body className="font-sans">
         <Suspense fallback={null}>
-          <ThemeProvider defaultTheme="dark">
-            <AuthProvider>
-              {children}
-              <Toaster 
-                theme="dark" 
-                position="top-right"
-                richColors
-              />
-            </AuthProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster 
+              theme="dark" 
+              position="top-right"
+              richColors
+            />
           </ThemeProvider>
         </Suspense>
         {/* <Analytics /> */}

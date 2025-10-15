@@ -1,320 +1,265 @@
-"use client"
-
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
-  CirclePlus,
-  Layers,
   Wallet,
   TrendingUp,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
-import Link from "next/link"
-import { useState, useEffect, useRef } from "react"
-import { useAuth } from "@/context/AuthContext"
-import { toast } from "sonner"
+  Search,
+  Plus,
+  FileStack,
+  MessageSquare,
+  Music2,
+  Linkedin,
+  Youtube,
+  Facebook,
+  Instagram,
+  Twitter,
+  Send,
+  CheckCircle,
+  Percent,
+  User,
+  Filter,
+} from "lucide-react";
 
-const platforms = [
-  { id: "all", label: "All", icon: "•••" },
-  { id: "telegram", label: "Telegram", icon: "✈️" },
-  { id: "twitch", label: "Twitch", icon: "🎮" },
-  { id: "discord", label: "Discord", icon: "💬" },
-  { id: "soundcloud", label: "SoundCloud", icon: "🎵" },
-  { id: "threads", label: "Threads", icon: "🧵" },
-  { id: "linkedin", label: "LinkedIn", icon: "💼" },
-  { id: "pinterest", label: "Pinterest", icon: "📌" },
-  { id: "snapchat", label: "Snapchat", icon: "👻" },
-  { id: "reddit", label: "Reddit", icon: "🤖" },
-]
-
-export default function DashboardPage() {
-  const { user, fetchProfileDetails } = useAuth()
-  const [activePlatform, setActivePlatform] = useState("all")
-  const [isHovered, setIsHovered] = useState(false)
-  const [isManualScrolling, setIsManualScrolling] = useState(false)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-
-  // Debug: Log user data
-  console.log('Dashboard user data:', user)
-
-  const handleRefreshProfile = async () => {
-    try {
-      const result = await fetchProfileDetails()
-      if (result.success) {
-        toast.success('Profile updated successfully!')
-      } else {
-        toast.error(result.message)
-      }
-    } catch (error) {
-      toast.error('Failed to refresh profile')
-    }
-  }
-
-  // Infinite auto-scroll animation
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const scrollSpeed = 0.5 // pixels per frame for smooth movement
-    let frame: number
-
-    const animate = () => {
-      if (!isHovered && !isManualScrolling) {
-        container.scrollLeft += scrollSpeed
-        const totalWidth = container.scrollWidth / 2
-        if (container.scrollLeft >= totalWidth) {
-          container.scrollLeft = 0 // reset scroll for infinite effect
-        }
-      }
-      frame = requestAnimationFrame(animate)
-    }
-
-    frame = requestAnimationFrame(animate)
-
-    return () => cancelAnimationFrame(frame)
-  }, [isHovered, isManualScrolling])
-
-  // Reset manual scroll after delay
-  useEffect(() => {
-    if (isManualScrolling) {
-      const timer = setTimeout(() => setIsManualScrolling(false), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [isManualScrolling])
+export default function Dashboard() {
+  const platforms = [
+    { name: "All", icon: Plus },
+    { name: "Telegram", icon: Send },
+    { name: "Twitter", icon: Twitter },
+    { name: "Discord", icon: MessageSquare },
+    { name: "SoundCloud", icon: Music2 },
+    { name: "LinkedIn", icon: Linkedin },
+    { name: "YouTube", icon: Youtube },
+    { name: "Facebook", icon: Facebook },
+    { name: "Instagram", icon: Instagram },
+  ];
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8">
+    <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <Card className="bg-gradient-to-br from-teal-900/50 to-teal-800/30 backdrop-blur-xl border-teal-700/50 p-6 hover:shadow-xl hover:shadow-teal-500/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm text-teal-300 mb-1">Current Balance</p>
-              <h3 className="text-3xl font-bold text-white">${user?.balance?.toFixed(5) || '0.00000'}</h3>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium" style={{ color: 'var(--dashboard-text-secondary)' }}>Current Balance</CardTitle>
+            <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--dashboard-green)' }}>
+              <Wallet className="h-5 w-5 text-white" />
             </div>
-            <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-teal-400" />
-            </div>
-          </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-text-primary)' }}>$15.87007</div>
+          </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/30 backdrop-blur-xl border-purple-700/50 p-6 hover:shadow-xl hover:shadow-purple-500/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm text-purple-300 mb-1">Total Spending</p>
-              <h3 className="text-3xl font-bold text-white">${user?.totalSpent?.toFixed(5) || '0.00000'}</h3>
+        <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium" style={{ color: 'var(--dashboard-text-secondary)' }}>Total Spending</CardTitle>
+            <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--dashboard-red)' }}>
+              <TrendingUp className="h-5 w-5 text-white" />
             </div>
-            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
-            </div>
-          </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-text-primary)' }}>$249.77993</div>
+          </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-900/50 to-indigo-900/30 backdrop-blur-xl border-blue-700/50 p-6 hover:shadow-xl hover:shadow-blue-500/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-sm text-blue-300 mb-1">
-                Current Level: <span className="text-blue-400 font-semibold">JUNIOR</span>
-              </p>
-              <p className="text-xs text-blue-400 mb-2">Next Level: FREQUENT</p>
-              <div className="w-full bg-blue-950/50 rounded-full h-2 mb-2">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                  style={{ width: "5%" }}
-                />
-              </div>
-              <p className="text-xs text-blue-300">5% Progress</p>
-            </div>
-            <Link href="/dashboard/account">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Benefits <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
+        <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium" style={{ color: 'var(--dashboard-text-secondary)' }}>Current Level</CardTitle>
+            <Button size="sm" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
+              Benefits <ArrowRight className="h-3 w-3 ml-1" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-blue)' }}>JUNIOR</div>
+            <div className="text-sm" style={{ color: 'var(--dashboard-text-secondary)' }}>5%</div>
+            <div className="text-xs" style={{ color: 'var(--dashboard-text-muted)' }}>Next Level: FREQUENT</div>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Platform Tabs */}
-      <div className="relative mb-8">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setIsManualScrolling(true)
-              if (scrollContainerRef.current) {
-                scrollContainerRef.current.scrollBy({ left: -300, behavior: "smooth" })
-              }
-            }}
-            className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          <div
-            ref={scrollContainerRef}
-            id="platform-scroll"
-            className="flex-1 flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            {/* Duplicate for infinite loop */}
-            {[...platforms, ...platforms].map((platform, index) => (
-              <button
-                key={`${platform.id}-${index}`}
-                onClick={() => setActivePlatform(platform.id)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all font-medium",
-                  activePlatform === platform.id
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800",
-                )}
-              >
-                <span>{platform.icon}</span>
-                <span>{platform.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => {
-              setIsManualScrolling(true)
-              if (scrollContainerRef.current) {
-                scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" })
-              }
-            }}
-            className="hidden md:flex w-10 h-10 items-center justify-center rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Create Order Section */}
-        <Card className="lg:col-span-2 bg-slate-900/50 backdrop-blur-xl border-slate-800/50">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center">
-                <CirclePlus className="w-5 h-5 text-blue-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white">Create order</h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              <Link href="/dashboard/new-order" className="block">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-semibold shadow-lg shadow-blue-600/30">
-                  <CirclePlus className="w-5 h-5 mr-2" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Create Order */}
+        <div className="lg:col-span-2">
+          <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ color: 'var(--dashboard-text-primary)' }}>
+                <Plus className="h-5 w-5" />
+                Create order
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Order Type Buttons */}
+              <div className="flex gap-2">
+                <Button className="flex-1" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
+                  <Plus className="h-4 w-4 mr-2" />
                   New order
                 </Button>
-              </Link>
-              <Link href="/dashboard/mass-order" className="block">
-                <Button
-                  variant="outline"
-                  className="w-full bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-white h-12 text-base font-semibold"
-                >
-                  <Layers className="w-5 h-5 mr-2" />
+                <Button variant="outline" className="flex-1" style={{ borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
+                  <FileStack className="h-4 w-4 mr-2" />
                   Mass order
                 </Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
+              </div>
 
-        {/* Statistics Panel */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-800/50">
-          <div className="p-6">
-            <div className="flex gap-2 mb-6">
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-                Statistics
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--dashboard-text-muted)' }} />
+                <Input placeholder="Search" className="pl-10" style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }} />
+              </div>
+
+              {/* Social Media Filters */}
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <Button size="sm" className="whitespace-nowrap" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  All
+                </Button>
+                {platforms.slice(1).map((platform) => {
+                  const IconComponent = platform.icon;
+                  return (
+                    <Button key={platform.name} size="sm" variant="outline" className="whitespace-nowrap" style={{ borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
+                      <IconComponent className="h-4 w-4 mr-1" />
+                      {platform.name}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              {/* Category Dropdown */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Category</Label>
+                <Select defaultValue="youtube">
+                  <SelectTrigger style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
+                    <SelectValue placeholder="YouTube Adword Views - SKIPPABLE ADS [PACKAGES]" />
+                  </SelectTrigger>
+                  <SelectContent style={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)' }}>
+                    <SelectItem value="youtube">YouTube Adword Views - SKIPPABLE ADS [PACKAGES]</SelectItem>
+                    <SelectItem value="telegram">Telegram Services</SelectItem>
+                    <SelectItem value="twitter">Twitter Services</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Service Dropdown */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Service</Label>
+                <Select defaultValue="service1">
+                  <SelectTrigger style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
+                    <SelectValue placeholder="4414 - YouTube Adword Packages [Skippable Ads] [50K] [Nondrop] Start 0-24 Hrs" />
+                  </SelectTrigger>
+                  <SelectContent style={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)' }}>
+                    <SelectItem value="service1">4414 - YouTube Adword Packages [Skippable Ads] [50K] [Nondrop] Start 0-24 Hrs</SelectItem>
+                    <SelectItem value="service2">Service 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Link Input */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Link</Label>
+                <Input
+                  placeholder="Enter your link"
+                  style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}
+                />
+              </div>
+
+              {/* Charge Display */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Charge</Label>
+                <Input
+                  value="$43.20"
+                  readOnly
+                  style={{ backgroundColor: 'var(--muted)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)', fontWeight: '600' }}
+                />
+              </div>
+
+              {/* Submit Button */}
+              <Button className="w-full" style={{ backgroundColor: 'var(--dashboard-blue)', fontSize: '1.125rem', padding: '1.5rem 0' }}>
+                Submit
               </Button>
-              <Button
-                variant="outline"
-                className="flex-1 bg-slate-800/50 border-slate-700 hover:bg-slate-800 text-white font-semibold relative"
-              >
-                Read Before Ordering
-                <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold">
-                  1
-                </span>
-              </Button>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center">
-                    <span className="text-blue-400 font-semibold">👤</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-slate-400">Full Name</p>
-                    <p className="text-sm font-semibold text-white">{user?.name || 'Loading...'}</p>
-                  </div>
-                  <button
-                    onClick={handleRefreshProfile}
-                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                    title="Refresh profile data"
-                  >
-                    🔄
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-600/20 flex items-center justify-center">
-                    <span className="text-green-400 font-semibold">📧</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-slate-400">Email Address</p>
-                    <p className="text-xs sm:text-sm font-semibold text-white truncate" title={user?.email || 'Loading...'}>{user?.email || 'Loading...'}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center">
-                    <span className="text-red-400 font-semibold">%</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Discount Rate</p>
-                    <p className="text-sm font-semibold text-white">0%</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-600/20 flex items-center justify-center">
-                    <span className="text-green-400 font-semibold">✓</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Active Orders</p>
-                    <p className="text-sm font-semibold text-white">52</p>
+        {/* Right Sidebar */}
+        <div className="space-y-4">
+          {/* Statistics Card */}
+          <Card style={{ background: 'linear-gradient(to bottom, var(--dashboard-blue-dark), var(--dashboard-blue-darker))', border: 'none' }}>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Statistics Button */}
+                <Button 
+                  variant="ghost" 
+                  className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20 justify-start h-auto py-3"
+                >
+                  Statistics
+                </Button>
+                
+                {/* Read Before Ordering Button */}
+                <Button 
+                  variant="ghost" 
+                  className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20 justify-start h-auto py-3"
+                >
+                  Read Before Ordering
+                </Button>
+                
+                {/* Divider */}
+                <div className="border-t border-white/20 pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Username Card */}
+                    <div 
+                      className="p-3 rounded-lg flex items-center gap-2"
+                      style={{ background: 'linear-gradient(to bottom, var(--dashboard-blue-dark), var(--dashboard-blue-darker))' }}
+                    >
+                      <User className="h-4 w-4 text-white" />
+                      <div>
+                        <p className="text-xs text-white/70">Username</p>
+                        <p className="text-sm font-semibold text-white">shoaibsanto</p>
+                      </div>
+                    </div>
+                    
+                    {/* Discount Rate Card */}
+                    <div 
+                      className="p-3 rounded-lg flex items-center gap-2"
+                      style={{ background: 'linear-gradient(to bottom, var(--dashboard-blue-dark), var(--dashboard-blue-darker))' }}
+                    >
+                      <Percent className="h-4 w-4 text-white" />
+                      <div>
+                        <p className="text-xs text-white/70">Discount Rate</p>
+                        <p className="text-sm font-semibold text-white">0%</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-600/20 flex items-center justify-center">
-                    <span className="text-purple-400 font-semibold">📧</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Unread Tickets</p>
-                    <p className="text-sm font-semibold text-white">1</p>
-                  </div>
-                </div>
+          {/* Active Orders Card */}
+          <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
+            <CardContent className="p-6 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <CheckCircle className="h-8 w-8" style={{ color: 'var(--dashboard-green)' }} />
               </div>
-            </div>
-          </div>
-        </Card>
+              <div className="text-3xl font-bold" style={{ color: 'var(--dashboard-green)' }}>52</div>
+              <div className="text-sm" style={{ color: 'var(--dashboard-text-secondary)' }}>Active Orders</div>
+            </CardContent>
+          </Card>
+
+          {/* Unread Tickets Card */}
+          <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
+            <CardContent className="p-6 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <MessageSquare className="h-8 w-8" style={{ color: 'var(--dashboard-blue)' }} />
+              </div>
+              <div className="text-3xl font-bold" style={{ color: 'var(--dashboard-blue)' }}>1</div>
+              <div className="text-sm" style={{ color: 'var(--dashboard-text-secondary)' }}>Unread Tickets</div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  )
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ")
+  );
 }

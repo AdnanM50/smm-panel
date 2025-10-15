@@ -2,28 +2,39 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Sidebar } from "./_components/sidebar"
+import { SidebarContent } from "./_components/sidebar-content"
 import { Header } from "./_components/header"
-import { ProtectedRoute } from "@/components/ProtectedRoute"
-
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
 
   return (
-    <ProtectedRoute>
-      <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
-        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} isCollapsed={isCollapsed} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            isCollapsed={isCollapsed}
-            onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-          />
-          <main className="flex-1 overflow-y-auto pt-16">{children}</main>
-        </div>
+    <div className="flex h-screen" style={{ backgroundColor: 'var(--dashboard-bg-main)' }}>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <SidebarContent onClose={() => setSidebarOpen(false)} />
       </div>
-    </ProtectedRoute>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto p-4 sm:p-6">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   )
 }
