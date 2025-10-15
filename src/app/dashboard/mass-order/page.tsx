@@ -6,29 +6,27 @@ import { Layers, Info, Sparkles, Zap, Star } from "lucide-react";
 
 export default function MassOrder() {
   return (
-    <div className="space-y-8 max-w-6xl">
+    <div className="mass-order space-y-8 max-w-6xl">
       {/* Enhanced Header Section */}
       <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3">
-          <div className="p-3 rounded-full bg-gradient-primary">
+        <div className="mo-hero">
+          <div className="mo-hero-icon">
             <Sparkles className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Mass Order
-          </h1>
+          <h1 className="mo-hero-title">Mass Order</h1>
         </div>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Place multiple orders at once with our bulk ordering system
         </p>
       </div>
 
-      {/* Enhanced Main Card with Floating Animation */}
-      <Card className="p-8 bg-gradient-primary border-none floating-card relative overflow-hidden">
+      {/* Enhanced Main Card with strict light-mode gradient */}
+      <Card className="mo-card p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
         
         <div className="relative z-10 flex items-start gap-4 text-white">
-          <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+          <div className="mo-card-icon p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
             <Layers className="h-8 w-8" />
           </div>
           <div className="flex-1">
@@ -78,7 +76,7 @@ export default function MassOrder() {
             />
           </div>
 
-          <div className="p-4 rounded-xl bg-gradient-warning/10 border border-warning/20">
+          <div className="p-6 rounded-xl bg-gradient-warning/10 border border-warning/20">
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg bg-warning/20">
                 <Info className="h-5 w-5 text-warning" />

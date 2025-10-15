@@ -4,12 +4,14 @@ import type React from "react"
 import { useState } from "react"
 import { SidebarContent } from "./_components/sidebar-content"
 import { Header } from "./_components/header"
+import { ThemeProvider } from "@/context/theme-provider"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: 'var(--dashboard-bg-main)' }}>
+    <ThemeProvider>
+    <div className="flex h-screen dashboard-layout" style={{ backgroundColor: 'var(--dashboard-bg-main)' }}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
@@ -20,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out dashboard-sidebar
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <SidebarContent onClose={() => setSidebarOpen(false)} />
@@ -28,7 +30,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 lg:ml-0">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <div className="dashboard-header">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+        </div>
         <main className="flex-1 overflow-y-auto">
           <div className="container mx-auto p-4 sm:p-6">
             {children}
@@ -36,5 +40,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </ThemeProvider>
   )
 }

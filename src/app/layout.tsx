@@ -20,14 +20,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans">
         <Suspense fallback={null}>
-          <ThemeProvider>
+         
             {children}
             <Toaster 
               theme="dark" 
               position="top-right"
               richColors
             />
-          </ThemeProvider>
+          {/* </ThemeProvider> */}
         </Suspense>
         {/* <Analytics /> */}
       </body>

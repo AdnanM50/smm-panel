@@ -35,7 +35,7 @@ export default function LandingPage() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 landing-page">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800/50">
         <div className="container mx-auto px-4 lg:px-8">
@@ -64,7 +64,7 @@ export default function LandingPage() {
 
             <div className="hidden md:flex items-center gap-4">
               <Link href="/login">
-                <Button variant="ghost" className="text-white hover:bg-slate-800">
+                <Button variant="ghost" className="text-white hover:bg-slate-800 hover:text-orange-400">
                   Sign In
                 </Button>
               </Link>
@@ -221,7 +221,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="absolute -top-3 sm:-top-6 -right-3 sm:-right-6 bg-slate-900/90 backdrop-blur-lg border border-slate-800 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-xl">
+              <div className="absolute -top-3 sm:-top-6 -right-3 sm:-right-6 bg-slate-900/90 backdrop-blur-lg border border-slate-800 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-xl z-10 landing-stats-card">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-orange-600 to-orange-400 flex items-center justify-center">
                     <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />

@@ -186,49 +186,57 @@ export default function Dashboard() {
         {/* Right Sidebar */}
         <div className="space-y-4">
           {/* Statistics Card */}
-          <Card style={{ background: 'linear-gradient(to bottom, var(--dashboard-blue-dark), var(--dashboard-blue-darker))', border: 'none' }}>
+          <Card className="border-none rounded-2xl bg-gradient-to-b from-white to-blue-50/40 shadow-sm ring-1 ring-blue-100/70 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0">
             <CardContent className="p-6">
               <div className="space-y-4">
                 {/* Statistics Button */}
                 <Button 
                   variant="ghost" 
-                  className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20 justify-start h-auto py-3"
+                  className="w-full h-auto py-3 px-4 justify-between rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 shadow-xs transition-colors dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/20"
                 >
-                  Statistics
+                  <span className="inline-flex items-center gap-2">
+                    Statistics
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-blue-400 dark:text-white/70" />
                 </Button>
                 
                 {/* Read Before Ordering Button */}
                 <Button 
                   variant="ghost" 
-                  className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20 justify-start h-auto py-3"
+                  className="w-full h-auto py-3 px-4 justify-between rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 shadow-xs transition-colors dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/20"
                 >
-                  Read Before Ordering
+                  <span className="inline-flex items-center gap-2">
+                    Read Before Ordering
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-blue-400 dark:text-white/70" />
                 </Button>
                 
                 {/* Divider */}
-                <div className="border-t border-white/20 pt-4">
+                <div className="border-t border-blue-100 dark:border-white/20 pt-4">
                   <div className="grid grid-cols-2 gap-3">
                     {/* Username Card */}
                     <div 
-                      className="p-3 rounded-lg flex items-center gap-2"
-                      style={{ background: 'linear-gradient(to bottom, var(--dashboard-blue-dark), var(--dashboard-blue-darker))' }}
+                      className="p-3 rounded-xl flex items-center gap-3 bg-blue-50 ring-1 ring-blue-100 hover:shadow-sm transition-transform hover:-translate-y-0.5 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0"
                     >
-                      <User className="h-4 w-4 text-white" />
+                      <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center ring-1 ring-blue-200 dark:bg-white/10 dark:ring-white/10">
+                        <User className="h-4 w-4 text-blue-700 dark:text-white" />
+                      </div>
                       <div>
-                        <p className="text-xs text-white/70">Username</p>
-                        <p className="text-sm font-semibold text-white">shoaibsanto</p>
+                        <p className="text-xs text-blue-700/70 dark:text-white/70">Username</p>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-white">shoaibsanto</p>
                       </div>
                     </div>
                     
                     {/* Discount Rate Card */}
                     <div 
-                      className="p-3 rounded-lg flex items-center gap-2"
-                      style={{ background: 'linear-gradient(to bottom, var(--dashboard-blue-dark), var(--dashboard-blue-darker))' }}
+                      className="p-3 rounded-xl flex items-center gap-3 bg-blue-50 ring-1 ring-blue-100 hover:shadow-sm transition-transform hover:-translate-y-0.5 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0"
                     >
-                      <Percent className="h-4 w-4 text-white" />
+                      <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center ring-1 ring-blue-200 dark:bg-white/10 dark:ring-white/10">
+                        <Percent className="h-4 w-4 text-blue-700 dark:text-white" />
+                      </div>
                       <div>
-                        <p className="text-xs text-white/70">Discount Rate</p>
-                        <p className="text-sm font-semibold text-white">0%</p>
+                        <p className="text-xs text-blue-700/70 dark:text-white/70">Discount Rate</p>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-white">0%</p>
                       </div>
                     </div>
                   </div>

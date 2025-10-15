@@ -542,17 +542,19 @@
 
 /* Light mode adjustments for mood styles */
 .light .bg-gradient-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  color: #1e293b !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
 }
 
 .light .bg-gradient-card {
-  background: linear-gradient(145deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%);
+  background: linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.8) 100%);
   border: 1px solid rgba(0,0,0,0.1);
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .light .mood-tabs {
-  background: linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.8) 100%);
   border: 1px solid rgba(0,0,0,0.1);
 }
 
@@ -560,3 +562,308 @@
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
+
+/* Light mode specific adjustments for Mass Order page */
+.light .floating-card {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%) !important;
+  color: #1e293b !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.light .floating-card .text-white {
+  color: #1e293b !important;
+}
+
+.light .floating-card .text-white\/90 {
+  color: #475569 !important;
+}
+
+.light .floating-card .text-yellow-300 {
+  color: #f59e0b !important;
+}
+
+/* Light mode gradient text adjustments */
+.light .bg-gradient-to-r.from-blue-600.to-purple-600 {
+  background: linear-gradient(to right, #2563eb, #7c3aed) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Light mode glow effects */
+.light .glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Light mode pulse button */
+.light .pulse-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+}
+
+/* Light mode button adjustments */
+.light button.bg-gradient-primary,
+.light a.bg-gradient-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+}
+
+.light button.bg-gradient-primary:hover,
+.light a.bg-gradient-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+}
+
+/* Light mode gradient backgrounds for info cards */
+.light .bg-gradient-info {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  color: #1e40af !important;
+}
+
+.light .bg-gradient-success {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #166534 !important;
+}
+
+.light .bg-gradient-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  color: #92400e !important;
+}
+
+.light .bg-gradient-danger {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  color: #991b1b !important;
+}
+
+/* Light mode gradient card backgrounds with transparency */
+.light .bg-gradient-info\/10 {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.1) 100%) !important;
+}
+
+.light .bg-gradient-success\/10 {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%) !important;
+}
+
+.light .bg-gradient-warning\/10 {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%) !important;
+}
+
+.light .bg-gradient-danger\/10 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%) !important;
+}
+
+/* Light mode border colors for gradient cards */
+.light .border-info\/20 {
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.light .border-success\/20 {
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.light .border-warning\/20 {
+  border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+.light .border-danger\/20 {
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Light mode text color adjustments */
+.light .text-foreground {
+  color: #1f2937 !important;
+}
+
+.light .text-muted-foreground {
+  color: #6b7280 !important;
+}
+
+/* Light mode background adjustments for better contrast */
+.light .bg-background {
+  background-color: #ffffff !important;
+}
+
+.light .bg-popover {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+}
+
+/* Light mode input and select styling */
+.light .border-border {
+  border-color: rgba(0,0,0,0.1) !important;
+}
+
+.light input,
+.light textarea,
+.light select {
+  background-color: #ffffff !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #1f2937 !important;
+}
+
+.light input:hover,
+.light textarea:hover,
+.light select:hover {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Light mode button adjustments */
+.light .bg-gradient-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+}
+
+.light .bg-gradient-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+}
+
+/* Dashboard Layout Z-Index Fix */
+.dashboard-layout {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-header {
+  position: relative;
+  z-index: 50;
+}
+
+.dashboard-sidebar {
+  position: relative;
+  z-index: 40;
+}
+
+/* Prevent landing page elements from interfering with dashboard */
+.landing-page {
+  position: relative;
+  z-index: 0;
+}
+
+.landing-page .absolute {
+  z-index: 10;
+}
+
+/* Ensure dropdown menus appear above all other content */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+[data-radix-dropdown-menu-content] {
+  z-index: 9999 !important;
+}
+
+/* Additional Light Mode Styling */
+.light .floating-card .absolute {
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.light .bg-white\/20 {
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.light .bg-white\/5 {
+  background: rgba(59, 130, 246, 0.05) !important;
+}
+
+.light .backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Mass Order page - keep original purple look in light mode */
+.light .mass-order .bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.light .mass-order .floating-card {
+  background: transparent !important; /* gradient already provided by bg-gradient-primary */
+  border: none !important;
+}
+
+.light .mass-order .floating-card .text-white {
+  color: #ffffff !important;
+}
+
+.light .mass-order .floating-card .text-white\/90 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.light .mass-order .floating-card .text-yellow-300 {
+  color: #fde047 !important; /* keep bright yellow icons */
+}
+
+.light .mass-order .floating-card .absolute {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Keep submit button purple on Mass Order */
+.light .mass-order button.bg-gradient-primary,
+.light .mass-order a.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #ffffff !important;
+}
+
+.light .mass-order button.bg-gradient-primary:hover,
+.light .mass-order a.bg-gradient-primary:hover {
+  background: linear-gradient(135deg, #5b6fdf 0%, #6f43a1 100%) !important;
+}
+
+/* Hard-coded Mass Order header styles (match provided screenshot) */
+.mass-order .mo-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.mass-order .mo-hero-icon {
+  padding: 12px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #6b5cf6 0%, #6ec1ff 100%) !important; /* purple to cyan bar tone from image */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mass-order .mo-hero-title {
+  font-weight: 800 !important;
+  font-size: 2.25rem !important; /* ~text-4xl */
+  line-height: 1.2 !important;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Hard-coded Mass Order card gradient (light mode and default) */
+.mass-order .mo-card {
+  background: linear-gradient(90deg, #6366f1 0%, #7c3aed 50%, #8b5cf6 100%) !important;
+  color: #ffffff !important;
+  border-radius: 14px;
+  border: none !important;
+}
+
+.mass-order .mo-card .text-white { color: #ffffff !important; }
+.mass-order .mo-card .text-white\/90 { color: rgba(255,255,255,0.9) !important; }
+.mass-order .mo-card .text-yellow-300 { color: #fde047 !important; }
+.mass-order .mo-card .bg-white\/20 { background: rgba(255,255,255,0.15) !important; }
+.mass-order .mo-card .bg-white\/5 { background: rgba(255,255,255,0.08) !important; }
+
+/* Ensure all text inside the Mass Order card is white (match screenshot) */
+.mass-order .mo-card h1,
+.mass-order .mo-card h2,
+.mass-order .mo-card h3,
+.mass-order .mo-card p,
+.mass-order .mo-card span,
+.mass-order .mo-card label,
+.mass-order .mo-card .text-foreground,
+.mass-order .mo-card .text-muted-foreground {
+  color: #ffffff !important;
+}
+
+/* Force icons to white in light mode */
+.light .mass-order .mo-hero .text-white { color: #ffffff !important; }
+.light .mass-order .mo-hero .text-white svg { color: #ffffff !important; fill: #ffffff !important; }
+.light .mass-order .mo-hero-icon svg { color: #ffffff !important; }
+.light .mass-order .mo-card .mo-card-icon svg { color: #ffffff !important; }

@@ -5,32 +5,48 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, DollarSign, TrendingUp, Info, Sparkles, Zap, Star } from "lucide-react";
+import { useState } from "react";
 
 export default function AddFunds() {
+  const paymentOptions: Record<string, { label: string; description: string }> = {
+    binance: {
+      label: "Binance Pay",
+      description:
+        "Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%",
+    },
+    paypal: {
+      label: "PayPal",
+      description: "Secure PayPal integration",
+    },
+    stripe: {
+      label: "Stripe",
+      description: "Credit/Debit card payments",
+    },
+  };
+
+  const [paymentMethod, setPaymentMethod] = useState<string>("binance");
   return (
-    <div className="space-y-8 max-w-6xl">
-      {/* Enhanced Header Section */}
+    <div className="mass-order space-y-8 max-w-6xl">
+      {/* Hero section - identical structure/classes to Mass Order */}
       <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3">
-          <div className="p-3 rounded-full bg-gradient-primary">
+        <div className="mo-hero">
+          <div className="mo-hero-icon">
             <Sparkles className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Add Funds
-          </h1>
+          <h1 className="mo-hero-title">Add Funds</h1>
         </div>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Power up your account with our secure payment system and unlock premium features
         </p>
       </div>
 
-      {/* Enhanced Main Card with Floating Animation */}
-      <Card className="p-8 bg-gradient-primary border-none floating-card relative overflow-hidden">
+      {/* Main gradient card - same class as Mass Order */}
+      <Card className="mo-card p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
         
         <div className="relative z-10 flex items-start gap-4 text-white">
-          <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+          <div className="mo-card-icon p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
             <Wallet className="h-8 w-8" />
           </div>
           <div className="flex-1">
@@ -39,7 +55,7 @@ export default function AddFunds() {
               Instant Fund Addition
             </h2>
             <p className="text-white/90 text-lg leading-relaxed">
-              Generate secure invoices and add funds instantly. Multiple payment methods available with exclusive bonuses!
+              Please ensure the payment details are correct before generating your invoice. Our system will process it efficiently and securely.
             </p>
             <div className="flex items-center gap-4 mt-4">
               <div className="flex items-center gap-2 text-sm">
@@ -82,9 +98,16 @@ export default function AddFunds() {
 
               <div className="space-y-4">
                 <label className="text-lg font-semibold text-foreground block">Payment Method</label>
-                <Select defaultValue="binance">
-                  <SelectTrigger className="h-14 text-lg bg-background border-border hover:border-primary/50 transition-colors">
-                    <SelectValue />
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger className="min-h-[56px] items-start py-3 bg-background border-border hover:border-primary/50 transition-colors">
+                    <div className="flex flex-col text-left w-full">
+                      <span className="font-semibold leading-5">
+                        {paymentOptions[paymentMethod]?.label}
+                      </span>
+                      <span className="text-sm text-muted-foreground leading-4 truncate">
+                        {paymentOptions[paymentMethod]?.description}
+                      </span>
+                    </div>
                   </SelectTrigger>
                   <SelectContent className="bg-popover">
                     <SelectItem value="binance" className="py-3">
