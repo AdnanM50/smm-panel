@@ -867,3 +867,27 @@
 .light .mass-order .mo-hero .text-white svg { color: #ffffff !important; fill: #ffffff !important; }
 .light .mass-order .mo-hero-icon svg { color: #ffffff !important; }
 .light .mass-order .mo-card .mo-card-icon svg { color: #ffffff !important; }
+
+/* Dashboard marquee auto-carousel */
+.marquee-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  width: auto;
+  animation: marquee-scroll 18s linear infinite;
+}
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (hover: hover) {
+  .marquee-container:hover .marquee-track {
+    animation-play-state: paused;
+  }
+}

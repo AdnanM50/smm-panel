@@ -110,21 +110,27 @@ export default function Dashboard() {
                 <Input placeholder="Search" className="pl-10" style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }} />
               </div>
 
-              {/* Social Media Filters */}
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                <Button size="sm" className="whitespace-nowrap" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  All
-                </Button>
-                {platforms.slice(1).map((platform) => {
-                  const IconComponent = platform.icon;
-                  return (
-                    <Button key={platform.name} size="sm" variant="outline" className="whitespace-nowrap" style={{ borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
-                      <IconComponent className="h-4 w-4 mr-1" />
-                      {platform.name}
-                    </Button>
-                  );
-                })}
+              {/* Social Media Filters - Auto carousel (marquee) */}
+              <div className="marquee-container pb-2">
+                <div className="marquee-track">
+                  {[...Array(2)].map((_, loopIndex) => (
+                    <div key={loopIndex} className="marquee-group inline-flex items-center gap-2 pr-4" aria-hidden={loopIndex === 1}>
+                      <Button size="sm" className="whitespace-nowrap" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        All
+                      </Button>
+                      {platforms.slice(1).map((platform) => {
+                        const IconComponent = platform.icon;
+                        return (
+                          <Button key={`${platform.name}-${loopIndex}`} size="sm" variant="outline" className="whitespace-nowrap" style={{ borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
+                            <IconComponent className="h-4 w-4 mr-1" />
+                            {platform.name}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Category Dropdown */}

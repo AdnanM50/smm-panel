@@ -95,14 +95,13 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
                 href={item.url} 
                 onClick={onClose} // Close sidebar when navigating on mobile
                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  pathname === item.url 
-                    ? "text-white" 
-                    : ""
+                  pathname === item.url ? "text-white" : ""
                 }`}
                 style={{
                   backgroundColor: pathname === item.url ? 'var(--dashboard-blue)' : 'transparent',
                   color: pathname === item.url ? 'white' : 'var(--dashboard-text-primary)'
                 }}
+                aria-current={pathname === item.url ? 'page' : undefined}
                 onMouseEnter={(e) => {
                   if (pathname !== item.url) {
                     e.currentTarget.style.backgroundColor = 'var(--accent)'
@@ -116,8 +115,8 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
                   }
                 }}
               >
-                <item.icon className="h-5 w-5" />
-                <span>{item.title}</span>
+                <item.icon className="h-5 w-5" style={{ color: pathname === item.url ? 'white' : 'var(--dashboard-text-primary)' }} />
+                <span style={{ color: pathname === item.url ? 'white' : 'inherit' }}>{item.title}</span>
                 {item.badge && (
                   <span className="ml-auto text-white text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--dashboard-orange)' }}>
                     {item.badge}
