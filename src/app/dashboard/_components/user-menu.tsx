@@ -23,12 +23,10 @@ export function UserMenu() {
               S
             </AvatarFallback>
           </Avatar>
-          <div className="hidden sm:block text-left">
+          <div className="hidden sm:block text-left cursor-pointer">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>shoaibsanto</span>
-              <Badge className="h-5 px-2 text-xs text-white border-0" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
-                JUNIOR
-              </Badge>
+             
             </div>
           </div>
         </Button>
@@ -40,24 +38,8 @@ export function UserMenu() {
             Account
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <FileText className="mr-2 h-4 w-4" />
-          Terms of service
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <HelpCircle className="mr-2 h-4 w-4" />
-          FAQ
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Code2 className="mr-2 h-4 w-4" />
-          API
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
+     
+        {/* <DropdownMenuSeparator /> */}
         <DropdownMenuItem className="text-red-600 focus:text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
           Logout

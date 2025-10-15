@@ -16,9 +16,9 @@ export default function Account() {
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-3">
           <div className="p-3 rounded-full bg-gradient-primary">
-            <User className="h-8 w-8 text-white" />
+            <User className="h-8 w-8 !text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-blue-600 dark:bg-gradient-to-r dark:from-blue-600 dark:to-purple-600 dark:bg-clip-text dark:text-transparent">
             Account Settings
           </h1>
         </div>

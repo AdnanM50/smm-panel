@@ -584,10 +584,19 @@
 
 /* Light mode gradient text adjustments */
 .light .bg-gradient-to-r.from-blue-600.to-purple-600 {
-  background: linear-gradient(to right, #2563eb, #7c3aed) !important;
+  background: linear-gradient(to right, #1e40af, #6b21a8) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
+}
+
+/* Ensure gradient text is visible in light mode */
+.light h1.bg-gradient-to-r.from-blue-600.to-purple-600 {
+  background: linear-gradient(to right, #1e40af, #6b21a8) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
 }
 
 /* Light mode glow effects */
