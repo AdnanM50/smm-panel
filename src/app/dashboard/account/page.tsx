@@ -8,8 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User, Bell, Shield, Copy } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 export default function Account() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out');
+    // Redirect to login page after a brief delay to show toast
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 300);
+  };
+
   return (
     <div className="space-y-8 max-w-6xl">
       {/* Enhanced Header Section */}
@@ -45,15 +58,16 @@ export default function Account() {
               <div className="flex flex-col items-center mb-6">
                 <Avatar className="h-24 w-24 mb-4 bg-gradient-primary">
                   <AvatarFallback className="bg-transparent text-white text-3xl font-bold">
-                    S
+                    {user?.name?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <h2 className="text-2xl font-bold text-foreground">shoaibsanto</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{user?.name || user?.username || 'User'}</h2>
                     <Badge className="bg-primary/10 text-primary border-primary/20">✓</Badge>
                   </div>
-                  <p className="text-muted-foreground">santosarker00@gmail.com</p>
+                  <p className="text-muted-foreground">{user?.email || 'No email'}</p>
+                  <p className="text-sm text-muted-foreground mt-1">@{user?.username || 'username'}</p>
                 </div>
               </div>
 
@@ -68,10 +82,19 @@ export default function Account() {
                 </Button>
               </div>
 
-              <div className="space-y-6">
+                <div className="space-y-6">
                 <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                   <Button className="w-full bg-gradient-primary text-lg py-6">
                     Change password
+                  </Button>
+                </div>
+
+                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                  <Button 
+                    onClick={handleLogout}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white text-lg py-6"
+                  >
+                    Logout
                   </Button>
                 </div>
 
