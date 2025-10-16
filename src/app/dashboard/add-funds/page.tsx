@@ -4,10 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, DollarSign, TrendingUp, Info, Sparkles, Zap, Star } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Wallet, DollarSign, TrendingUp, Info, Sparkles, Zap, Star, Plus } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 export default function AddFunds() {
+  const { updateProfile, user } = useAuth();
+  
   const paymentOptions: Record<string, { label: string; description: string }> = {
     binance: {
       label: "Binance Pay",
@@ -22,9 +29,69 @@ export default function AddFunds() {
       label: "Stripe",
       description: "Credit/Debit card payments",
     },
+    manual: {
+      label: "Add Balance Manually",
+      description: "Add balance directly to your account",
+    },
   };
 
   const [paymentMethod, setPaymentMethod] = useState<string>("binance");
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualBalance, setManualBalance] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handlePaymentMethodChange = (value: string) => {
+    setPaymentMethod(value);
+    if (value === "manual") {
+      setIsManualModalOpen(true);
+    }
+  };
+
+  const handleProceedToPayment = () => {
+    if (paymentMethod === "manual") {
+      setIsManualModalOpen(true);
+    } else {
+      // Handle other payment methods
+      console.log("Proceeding with payment method:", paymentMethod);
+    }
+  };
+
+  const handleManualBalanceUpdate = async () => {
+    if (!manualBalance || isNaN(Number(manualBalance)) || Number(manualBalance) <= 0) {
+      toast.error("Invalid Amount", {
+        description: "Please enter a valid positive number for the balance.",
+      });
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const currentBalance = user?.balance || 0;
+      const newBalance = currentBalance + Number(manualBalance);
+      
+      const result = await updateProfile({ balance: newBalance });
+      
+      if (result.success) {
+        toast.success("Balance Added Successfully!", {
+          description: `Your balance has been updated. New balance: $${newBalance.toFixed(2)}`,
+        });
+        setIsManualModalOpen(false);
+        setManualBalance("");
+        setPaymentMethod("binance"); // Reset to default payment method
+      } else {
+        toast.error("Update Failed", {
+          description: result.message || "Failed to update balance. Please try again.",
+        });
+      }
+    } catch (error) {
+      toast.error("Error", {
+        description: "An error occurred while updating your balance. Please try again.",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="mass-order space-y-8 max-w-6xl">
       {/* Hero section - identical structure/classes to Mass Order */}
@@ -72,7 +139,7 @@ export default function AddFunds() {
       </Card>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 p-8 bg-gradient-card border-border glow-on-hover">
+        <Card className="lg:col-span-2 p-8 bg-gradient-card h-fit border-border glow-on-hover">
           <Tabs defaultValue="add" className="w-full">
             <TabsList className="mood-tabs grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="add" className="mood-tab-trigger">
@@ -98,7 +165,7 @@ export default function AddFunds() {
 
               <div className="space-y-4">
                 <label className="text-lg font-semibold text-foreground block">Payment Method</label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <Select value={paymentMethod} onValueChange={handlePaymentMethodChange}>
                   <SelectTrigger className="min-h-[56px] items-start py-3 bg-background border-border hover:border-primary/50 transition-colors">
                     <div className="flex flex-col text-left w-full">
                       <span className="font-semibold leading-5">
@@ -128,6 +195,15 @@ export default function AddFunds() {
                         <span className="text-sm text-muted-foreground">Credit/Debit card payments</span>
                       </div>
                     </SelectItem>
+                    <SelectItem value="manual" className="py-3">
+                      <div className="flex flex-col">
+                        <span className="font-semibold flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add Balance Manually
+                        </span>
+                        <span className="text-sm text-muted-foreground">Add balance directly to your account</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -148,7 +224,10 @@ export default function AddFunds() {
                 </div>
               </div>
 
-              <Button className="w-full bg-gradient-primary text-xl py-6 pulse-button glow-on-hover">
+              <Button 
+                onClick={handleProceedToPayment}
+                className="w-full bg-gradient-primary text-xl py-6 pulse-button glow-on-hover"
+              >
                 <Zap className="mr-3 h-6 w-6" />
                 Proceed to Payment
               </Button>
@@ -179,17 +258,17 @@ export default function AddFunds() {
             <div className="space-y-6">
               <div className="p-4 rounded-xl bg-gradient-info/10 border border-info/20">
                 <p className="text-sm text-muted-foreground mb-2">Welcome back,</p>
-                <p className="text-lg font-semibold text-foreground">shoaibsanto</p>
+                <p className="text-lg font-semibold text-foreground">{user?.name || user?.username || 'User'}</p>
               </div>
               
               <div className="p-4 rounded-xl bg-gradient-success/10 border border-success/20">
                 <p className="text-sm text-muted-foreground mb-2">Current Balance</p>
-                <p className="text-3xl font-bold text-success">$15.87</p>
+                <p className="text-3xl font-bold text-success">${user?.balance?.toFixed(2) || '0.00'}</p>
               </div>
               
               <div className="p-4 rounded-xl bg-gradient-warning/10 border border-warning/20">
                 <p className="text-sm text-muted-foreground mb-2">Total Spent</p>
-                <p className="text-2xl font-bold text-warning">$249.78</p>
+                <p className="text-2xl font-bold text-warning">${user?.totalSpent?.toFixed(2) || '0.00'}</p>
               </div>
               
               <div className="pt-4 border-t border-border">
@@ -227,6 +306,91 @@ export default function AddFunds() {
           </Card>
         </div>
       </div>
+
+      {/* Manual Balance Modal */}
+      <Dialog 
+        open={isManualModalOpen} 
+        onOpenChange={(open) => {
+          setIsManualModalOpen(open);
+          if (!open) {
+            setManualBalance("");
+            setPaymentMethod("binance"); // Reset to default payment method
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Add Balance Manually
+            </DialogTitle>
+            <DialogDescription>
+              Enter the amount you want to add to your account balance.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="balance" className="text-right">
+                Amount ($)
+              </Label>
+              <Input
+                id="balance"
+                type="number"
+                placeholder="0.00"
+                value={manualBalance}
+                onChange={(e) => setManualBalance(e.target.value)}
+                className="col-span-3"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            {user && (
+              <div className="p-3 rounded-lg bg-muted/50">
+                <p className="text-sm text-muted-foreground">
+                  Current Balance: <span className="font-semibold text-foreground">${user.balance?.toFixed(2) || '0.00'}</span>
+                </p>
+                {manualBalance && !isNaN(Number(manualBalance)) && Number(manualBalance) > 0 && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    New Balance: <span className="font-semibold text-success">${(user.balance + Number(manualBalance)).toFixed(2)}</span>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsManualModalOpen(false);
+                setManualBalance("");
+                setPaymentMethod("binance"); // Reset to default payment method
+              }}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleManualBalanceUpdate}
+              disabled={isUpdating || !manualBalance || isNaN(Number(manualBalance)) || Number(manualBalance) <= 0}
+              className="bg-gradient-primary"
+            >
+              {isUpdating ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Adding Balance...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Balance
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

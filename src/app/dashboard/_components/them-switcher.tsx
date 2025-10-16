@@ -8,17 +8,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/context/theme-provider";
 import { Sun, Moon, Monitor } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const ThemeIcon = dynamic(() => Promise.resolve(function ThemeIcon() {
+  const { theme } = useTheme();
+  
+  if (theme === "light") return <Sun className="h-5 w-5" />;
+  if (theme === "dark") return <Moon className="h-5 w-5" />;
+  return <Monitor className="h-5 w-5" />;
+}), { 
+  ssr: false,
+  loading: () => <Monitor className="h-5 w-5" />
+});
 
 export function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-10 w-10">
-          {theme === "light" && <Sun className="h-5 w-5" />}
-          {theme === "dark" && <Moon className="h-5 w-5" />}
-          {theme === "system" && <Monitor className="h-5 w-5" />}
+          <ThemeIcon />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">

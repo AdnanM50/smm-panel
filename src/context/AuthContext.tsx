@@ -15,6 +15,14 @@ interface User {
   updatedAt: string
 }
 
+interface UpdateProfileData {
+  email?: string
+  username?: string
+  name?: string
+  password?: string
+  balance?: number
+}
+
 interface AuthContextType {
   user: User | null
   token: string | null
@@ -23,6 +31,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   signup: (email: string, username: string, name: string, password: string) => Promise<{ success: boolean; message: string }>
   fetchProfileDetails: () => Promise<{ success: boolean; message: string }>
+  updateProfile: (profileData: UpdateProfileData) => Promise<{ success: boolean; message: string }>
   verifyEmail: (email: string) => Promise<{ success: boolean; message: string }>
   verifyOTP: (email: string, otp: string) => Promise<{ success: boolean; message: string }>
   resetPassword: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; message: string }>
@@ -219,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
 
       if (response.ok && data.status === 'Success' && data.data && data.data.length > 0) {
-        const profileData = data.data[0] // API returns array with single user object
+        const profileData = data.data[0]
         const updatedUser: User = {
           _id: profileData._id,
           id: profileData._id,
@@ -245,6 +254,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Profile details fetch error:', error)
       return { success: false, message: 'Network error while fetching profile details' }
+    }
+  }
+
+  const updateProfile = async (profileData: UpdateProfileData): Promise<{ success: boolean; message: string }> => {
+    try {
+      if (!token || !user) {
+        return { success: false, message: 'No authentication token or user data available' }
+      }
+
+      const response = await fetch(`${API_BASE_URL}/profileUpdate/${user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': token,
+        },
+        body: JSON.stringify(profileData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.status === 'Success') {
+        // Update local user state with new data
+        const updatedUser: User = {
+          ...user,
+          email: profileData.email || user.email,
+          username: profileData.username || user.username,
+          name: profileData.name || user.name,
+          balance: profileData.balance !== undefined ? profileData.balance : user.balance,
+          updatedAt: new Date().toISOString(),
+        }
+
+        setUser(updatedUser)
+        if (typeof window !== "undefined") {
+          localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+        }
+
+        return { success: true, message: data.message || 'Profile updated successfully' }
+      } else {
+        return { success: false, message: data.message || 'Failed to update profile' }
+      }
+    } catch (error) {
+      console.error('Update profile error:', error)
+      return { success: false, message: 'Network error while updating profile' }
     }
   }
 
@@ -335,6 +387,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     signup,
     fetchProfileDetails,
+    updateProfile,
     verifyEmail,
     verifyOTP,
     resetPassword,

@@ -5,12 +5,14 @@ import { useState } from "react"
 import { SidebarContent } from "./_components/sidebar-content"
 import { Header } from "./_components/header"
 import { ThemeProvider } from "@/context/theme-provider"
+import { ServicesProvider } from "@/context/ServicesContext"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <ThemeProvider>
+    <ServicesProvider>
     <div className="flex h-screen dashboard-layout" style={{ backgroundColor: 'var(--dashboard-bg-main)' }}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
@@ -40,6 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </ServicesProvider>
     </ThemeProvider>
   )
 }
