@@ -1,9 +1,10 @@
+'use client'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Wallet,
   TrendingUp,
@@ -24,8 +25,183 @@ import {
   User,
   Filter,
 } from "lucide-react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { fetchServicesFromApi, type ApiServiceItem } from "./services/service-api";
+import { placeNewOrder, type PlaceOrderRequest } from "./order-api";
+import { toast } from "sonner";
 
 export default function Dashboard() {
+  const { token, user } = useAuth()
+  const [balance, setBalance] = useState<number | null>(null)
+  const [totalSpent, setTotalSpent] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  // Service search and order form states
+  const [searchQuery, setSearchQuery] = useState("")
+  const [services, setServices] = useState<ApiServiceItem[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [selectedService, setSelectedService] = useState<ApiServiceItem | null>(null)
+  const [link, setLink] = useState("")
+  const [quantity, setQuantity] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (!token) return
+        setIsLoading(true)
+        const res = await fetch('https://smm-panel-khan-it.onrender.com/api/getDashboardData', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            token,
+          },
+          next: { revalidate: 60 },
+        })
+        const data = await res.json()
+        if (res.ok && data?.success && data?.data) {
+          setBalance(Number(data.data.balance) || 0)
+          setTotalSpent(Number(data.data.totalSpent) || 0)
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+  }, [token])
+
+  // Service search functionality
+  const searchServices = useCallback(async (query: string) => {
+    if (!token || !query.trim()) {
+      setServices([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      // Search through multiple pages to find services
+      let allServices: ApiServiceItem[] = []
+      let page = 1
+      const limit = 100
+      let hasMorePages = true
+
+      while (hasMorePages && page <= 10) { // Limit to 10 pages for performance
+        const pageServices = await fetchServicesFromApi({
+          profit: 10,
+          page,
+          limit,
+          token,
+        })
+        
+        allServices = [...allServices, ...pageServices]
+        hasMorePages = pageServices.length === limit
+        page++
+      }
+
+      // Filter services based on search query
+      const filteredServices = allServices.filter(service => {
+        const queryLower = query.toLowerCase()
+        return (
+          service.name.toLowerCase().includes(queryLower) ||
+          service.service.toString().includes(query) ||
+          service.category?.toLowerCase().includes(queryLower)
+        )
+      })
+
+      setServices(filteredServices.slice(0, 50)) // Limit to 50 results
+    } catch (error) {
+      console.error('Error searching services:', error)
+      toast.error("Failed to search services")
+    } finally {
+      setIsSearching(false)
+    }
+  }, [token])
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchServices(searchQuery)
+      } else {
+        setServices([])
+        setSelectedService(null)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, searchServices])
+
+  // Handle service selection
+  const handleServiceSelect = (service: ApiServiceItem) => {
+    setSelectedService(service)
+    setSearchQuery(service.name)
+    setServices([])
+  }
+
+  // Calculate total charge
+  const totalCharge = useMemo(() => {
+    if (!selectedService || !quantity) return 0
+    const qty = parseFloat(quantity)
+    if (isNaN(qty)) return 0
+    return (selectedService.userRate || selectedService.rate) * qty
+  }, [selectedService, quantity])
+
+  // Handle order submission
+  const handleSubmitOrder = async () => {
+    if (!selectedService || !link.trim() || !quantity.trim()) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+
+    if (!token) {
+      toast.error("Authentication required")
+      return
+    }
+
+    const qty = parseFloat(quantity)
+    if (isNaN(qty) || qty < selectedService.min || qty > selectedService.max) {
+      toast.error(`Quantity must be between ${selectedService.min} and ${selectedService.max}`)
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const orderData: PlaceOrderRequest = {
+        serviceId: selectedService.service,
+        link: link.trim(),
+        profit: selectedService.userRate || selectedService.rate,
+        quantity: qty,
+      }
+
+      const result = await placeNewOrder(orderData, token)
+      
+      if (result.success) {
+        toast.success("Order placed successfully!", {
+          description: `Order ID: ${result.order.apiOrderId}`
+        })
+        
+        // Reset form
+        setSelectedService(null)
+        setSearchQuery("")
+        setLink("")
+        setQuantity("")
+        setServices([])
+      } else {
+        toast.error("Failed to place order", {
+          description: result.message
+        })
+      }
+    } catch (error) {
+      console.error('Error placing order:', error)
+      toast.error("Failed to place order", {
+        description: "Please try again later"
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const platforms = [
     { name: "All", icon: Plus },
     { name: "Telegram", icon: Send },
@@ -50,7 +226,13 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-text-primary)' }}>$15.87007</div>
+            {isLoading ? (
+              <Skeleton className="h-7 w-32" />
+            ) : (
+              <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-text-primary)' }}>
+                ${balance?.toFixed(5) ?? '0.00000'}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -62,7 +244,13 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-text-primary)' }}>$249.77993</div>
+            {isLoading ? (
+              <Skeleton className="h-7 w-32" />
+            ) : (
+              <div className="text-2xl font-bold" style={{ color: 'var(--dashboard-text-primary)' }}>
+                ${totalSpent?.toFixed(5) ?? '0.00000'}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -104,11 +292,49 @@ export default function Dashboard() {
                 </Button>
               </div>
 
-              {/* Search Bar */}
+              {/* Service Search Bar */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--dashboard-text-muted)' }} />
-                <Input placeholder="Search" className="pl-10" style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }} />
+                <Input 
+                  placeholder="Search services by name or ID..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10" 
+                  style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }} 
+                />
+                {isSearching && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  </div>
+                )}
               </div>
+
+              {/* Search Results */}
+              {services.length > 0 && (
+                <div className="max-h-60 overflow-y-auto border rounded-lg bg-background">
+                  {services.map((service) => (
+                    <div
+                      key={service.service}
+                      onClick={() => handleServiceSelect(service)}
+                      className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {service.service} - {service.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Rate: ${service.userRate || service.rate} | Min: {service.min} | Max: {service.max}
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {service.category}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Social Media Filters - Auto carousel (marquee) */}
               <div className="marquee-container pb-2">
@@ -133,57 +359,76 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Category Dropdown */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Category</Label>
-                <Select defaultValue="youtube">
-                  <SelectTrigger style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
-                    <SelectValue placeholder="YouTube Adword Views - SKIPPABLE ADS [PACKAGES]" />
-                  </SelectTrigger>
-                  <SelectContent style={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)' }}>
-                    <SelectItem value="youtube">YouTube Adword Views - SKIPPABLE ADS [PACKAGES]</SelectItem>
-                    <SelectItem value="telegram">Telegram Services</SelectItem>
-                    <SelectItem value="twitter">Twitter Services</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Service Dropdown */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Service</Label>
-                <Select defaultValue="service1">
-                  <SelectTrigger style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
-                    <SelectValue placeholder="4414 - YouTube Adword Packages [Skippable Ads] [50K] [Nondrop] Start 0-24 Hrs" />
-                  </SelectTrigger>
-                  <SelectContent style={{ backgroundColor: 'var(--popover)', borderColor: 'var(--border)' }}>
-                    <SelectItem value="service1">4414 - YouTube Adword Packages [Skippable Ads] [50K] [Nondrop] Start 0-24 Hrs</SelectItem>
-                    <SelectItem value="service2">Service 2</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Selected Service Display */}
+              {selectedService && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Selected Service</Label>
+                  <div className="p-3 rounded-lg border bg-muted/50">
+                    <div className="font-medium text-sm">
+                      {selectedService.service} - {selectedService.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Rate: ${selectedService.userRate || selectedService.rate} | Min: {selectedService.min} | Max: {selectedService.max}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Category: {selectedService.category}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Link Input */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Link</Label>
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Link *</Label>
                 <Input
                   placeholder="Enter your link"
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
                   style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}
                 />
               </div>
 
-              {/* Charge Display */}
+              {/* Quantity Input */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Charge</Label>
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>
+                  Quantity * {selectedService && `(Min: ${selectedService.min}, Max: ${selectedService.max})`}
+                </Label>
                 <Input
-                  value="$43.20"
+                  type="number"
+                  placeholder="Enter quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  min={selectedService?.min || 0}
+                  max={selectedService?.max || 999999}
+                  style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}
+                />
+              </div>
+
+              {/* Total Charge Display */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Total Charge</Label>
+                <Input
+                  value={`$${totalCharge.toFixed(4)}`}
                   readOnly
                   style={{ backgroundColor: 'var(--muted)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)', fontWeight: '600' }}
                 />
               </div>
 
               {/* Submit Button */}
-              <Button className="w-full" style={{ backgroundColor: 'var(--dashboard-blue)', fontSize: '1.125rem', padding: '1.5rem 0' }}>
-                Submit
+              <Button 
+                className="w-full" 
+                style={{ backgroundColor: 'var(--dashboard-blue)', fontSize: '1.125rem', padding: '1.5rem 0' }}
+                onClick={handleSubmitOrder}
+                disabled={!selectedService || !link.trim() || !quantity.trim() || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Placing Order...
+                  </>
+                ) : (
+                  'Submit Order'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -229,7 +474,7 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="text-xs text-blue-700/70 dark:text-white/70">Username</p>
-                        <p className="text-sm font-semibold text-blue-900 dark:text-white">shoaibsanto</p>
+                        <p className="text-sm font-semibold text-blue-900 dark:text-white">{user?.username || user?.email || 'User'}</p>
                       </div>
                     </div>
                     

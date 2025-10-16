@@ -7,10 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wallet, DollarSign, TrendingUp, Info, Sparkles, Zap, Star, Plus } from "lucide-react";
-import { useState } from "react";
+import { Wallet, DollarSign, TrendingUp, Info, Sparkles, Zap, Star, Plus, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AddFunds() {
   const { updateProfile, user } = useAuth();
@@ -39,6 +42,21 @@ export default function AddFunds() {
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [manualBalance, setManualBalance] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [tabValue, setTabValue] = useState<string>("add");
+
+  // Transaction history state
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<Array<{
+    _id: string;
+    type: string;
+    amount: number;
+    description: string;
+    balanceBefore: number;
+    balanceAfter: number;
+    orderId?: string;
+    createdAt: string;
+  }>>([]);
 
   const handlePaymentMethodChange = (value: string) => {
     setPaymentMethod(value);
@@ -55,6 +73,38 @@ export default function AddFunds() {
       console.log("Proceeding with payment method:", paymentMethod);
     }
   };
+
+  const fetchTransactionHistory = async () => {
+    if (isHistoryLoading) return;
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const res = await fetch('https://smm-panel-khan-it.onrender.com/api/viewTransactionHistory', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('auth_token') ? { token: String(localStorage.getItem('auth_token')) } : {}),
+        },
+        next: { revalidate: 60 },
+      });
+      const data = await res.json();
+      if (res.ok && data?.status === 'Success' && Array.isArray(data.data)) {
+        setTransactions(data.data);
+      } else {
+        setHistoryError(data?.message || 'Failed to load transaction history');
+      }
+    } catch (e) {
+      setHistoryError('Network error while loading history');
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tabValue === 'history') {
+      fetchTransactionHistory();
+    }
+  }, [tabValue]);
 
   const handleManualBalanceUpdate = async () => {
     if (!manualBalance || isNaN(Number(manualBalance)) || Number(manualBalance) <= 0) {
@@ -140,7 +190,7 @@ export default function AddFunds() {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-2 p-8 bg-gradient-card h-fit border-border glow-on-hover">
-          <Tabs defaultValue="add" className="w-full">
+          <Tabs defaultValue="add" className="w-full" onValueChange={setTabValue}>
             <TabsList className="mood-tabs grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="add" className="mood-tab-trigger">
                 <DollarSign className="mr-2 h-5 w-5" />
@@ -148,7 +198,7 @@ export default function AddFunds() {
               </TabsTrigger>
               <TabsTrigger value="history" className="mood-tab-trigger">
                 <TrendingUp className="mr-2 h-5 w-5" />
-                <span className="font-semibold">Payment History</span>
+                <span className="font-semibold">Transaction History</span>
               </TabsTrigger>
             </TabsList>
 
@@ -234,13 +284,73 @@ export default function AddFunds() {
             </TabsContent>
 
             <TabsContent value="history">
-              <div className="text-center py-16">
-                <div className="p-6 rounded-full bg-gradient-info/20 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <TrendingUp className="h-12 w-12 text-primary" />
-                </div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">No Payment History</h3>
-                <p className="text-muted-foreground text-lg">Your payment transactions will appear here</p>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-foreground">Transaction History</h3>
+            
               </div>
+
+              {isHistoryLoading ? (
+                <div className="space-y-3">
+                  {[...Array(8)].map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : historyError ? (
+                <div className="text-center py-12">
+                  <p className="text-red-500 mb-4">{historyError}</p>
+                  <Button variant="outline" onClick={fetchTransactionHistory}>Try Again</Button>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="p-6 rounded-full bg-gradient-info/20 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <TrendingUp className="h-12 w-12 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">No Payment History</h3>
+                  <p className="text-muted-foreground text-lg">Your payment transactions will appear here</p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="w-12">Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Before</TableHead>
+                        <TableHead>After</TableHead>
+                        <TableHead>Date</TableHead>
+                        {/* <TableHead>Order ID</TableHead> */}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map((t) => (
+                        <TableRow key={t._id}>
+                          <TableCell className="capitalize">{t.type}</TableCell>
+                          <TableCell className={`font-semibold ${t.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>{t.amount >= 0 ? '+' : ''}${t.amount.toFixed(6)}</TableCell>
+                          <TableCell className="max-w-md">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="truncate cursor-help">
+                                    {t.description}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm break-words">
+                                  <p className="text-sm">{t.description}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell>${t.balanceBefore.toFixed(6)}</TableCell>
+                          <TableCell>${t.balanceAfter.toFixed(6)}</TableCell>
+                          <TableCell>{new Date(t.createdAt).toLocaleString()}</TableCell>
+                          {/* <TableCell>{t.orderId ? <code className="text-xs bg-muted px-2 py-1 rounded">{t.orderId}</code> : <span className="text-muted-foreground">-</span>}</TableCell> */}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </Card>

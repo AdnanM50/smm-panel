@@ -11,6 +11,10 @@ interface ServicesContextType {
   lastFetched: number | null
   refetch: () => Promise<void>
   isStale: boolean
+  loadingProgress: {
+    currentPage: number
+    totalPages: number | null
+  }
 }
 
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined)
@@ -24,6 +28,10 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastFetched, setLastFetched] = useState<number | null>(null)
+  const [loadingProgress, setLoadingProgress] = useState({
+    currentPage: 0,
+    totalPages: null as number | null,
+  })
 
   const isStale = lastFetched ? Date.now() - lastFetched > CACHE_DURATION : true
 
@@ -40,17 +48,44 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true)
     setError(null)
+    setLoadingProgress({ currentPage: 0, totalPages: null })
 
     try {
-      const data = await fetchServicesFromApi({ 
-        profit: 10, 
-        token: token ?? undefined 
-      })
+      let allServices: ApiServiceItem[] = []
+      let page = 1
+      const limit = 100
+      let hasMorePages = true
+
+      // Fetch all pages of data
+      while (hasMorePages) {
+        setLoadingProgress({ currentPage: page, totalPages: null })
+        
+        const pageData = await fetchServicesFromApi({ 
+          profit: 10, 
+          page,
+          limit,
+          token: token ?? undefined 
+        })
+        
+        allServices = [...allServices, ...pageData]
+        
+        // If we get less than the limit, we've reached the last page
+        hasMorePages = pageData.length === limit
+        page++
+        
+        // Safety check to prevent infinite loops
+        if (page > 1000) {
+          console.warn('Reached maximum page limit (1000)')
+          break
+        }
+      }
       
-      setServices(data)
+      setServices(allServices)
       setLastFetched(Date.now())
+      setLoadingProgress({ currentPage: 0, totalPages: null })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch services')
+      setLoadingProgress({ currentPage: 0, totalPages: null })
     } finally {
       setIsLoading(false)
     }
@@ -83,6 +118,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     lastFetched,
     refetch,
     isStale,
+    loadingProgress,
   }
 
   return <ServicesContext.Provider value={value}>{children}</ServicesContext.Provider>
