@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
 import {
   TrendingUp,
   Menu,
@@ -31,8 +33,18 @@ import {
 } from "lucide-react"
 
 export default function LandingPage() {
+  const router = useRouter()
+  const { isLoading, isAuthenticated, user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
+
+  // If user is authenticated, redirect to dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      // If you want to enforce role based routing, inspect user.role here
+      router.replace('/dashboard')
+    }
+  }, [isLoading, isAuthenticated, router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 landing-page">
