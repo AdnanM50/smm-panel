@@ -13,6 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Headphones, Paperclip } from "lucide-react";
+import { useAuth } from '@/context/AuthContext'
+import { createTicket } from './tickit-api'
+import { getMyTickets, Ticket as ApiTicket } from './tickit-api'
+import { useEffect } from 'react'
 
 const tickets = [
   {
@@ -53,8 +57,43 @@ const tickets = [
 ];
 
 export default function Tickets() {
+  const [subject, setSubject] = useState('')
+  const [orderApiId, setOrderApiId] = useState('')
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
+  const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [apiTickets, setApiTickets] = useState<ApiTicket[] | null>(null)
+  const [rawResponse, setRawResponse] = useState<any | null>(null)
+
+  const { token } = useAuth()
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      if (!token) return
+      setStatusMessage(null)
+      setApiTickets(null)
+      try {
+        const res = await getMyTickets(token)
+        if (!mounted) return
+        setRawResponse(res)
+        if (res.success) {
+          setApiTickets(res.tickets)
+        } else {
+          setStatusMessage(res.message || 'Failed to fetch tickets')
+        }
+      } catch (err) {
+        console.error(err)
+        if (!mounted) return
+        setStatusMessage('Network error while fetching tickets')
+      }
+    }
+
+    load()
+
+    return () => { mounted = false }
+  }, [token])
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -79,7 +118,7 @@ export default function Tickets() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Create Support Request */}
-        <Card className="p-6">
+        <Card className="p-6 h-fit">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Headphones className="w-5 h-5 text-primary" />
             Create a support request
@@ -91,96 +130,120 @@ export default function Tickets() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="orders">Orders</SelectItem>
-                  <SelectItem value="payment">Payment</SelectItem>
-                  <SelectItem value="technical">Technical</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="subject">Subject</Label>
+              <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ticket subject" className="dark:bg-input/60 dark:border-gray-700" />
             </div>
 
-            <div>
-              <Label htmlFor="subcategory">Subcategory</Label>
-              <Select value={subcategory} onValueChange={setSubcategory}>
-                <SelectTrigger id="subcategory">
-                  <SelectValue placeholder="Select subcategory" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cancel">Cancel</SelectItem>
-                  <SelectItem value="refill">Refill</SelectItem>
-                  <SelectItem value="speed">Speed</SelectItem>
-                  <SelectItem value="quality">Quality</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="orderId">Order ID (apiOrderId)</Label>
+              <Input id="orderId" value={orderApiId} onChange={(e) => setOrderApiId(e.target.value)} placeholder="Enter API Order ID (e.g. 7399585)" className="dark:bg-input/60 dark:border-gray-700" />
             </div>
 
-            <div>
-              <Label htmlFor="orderId">Order ID</Label>
-              <Input id="orderId" placeholder="Enter order ID" />
-            </div>
-
-            <div>
+            <div className="flex flex-col gap-1">
               <Label htmlFor="message">Message</Label>
               <Textarea
                 id="message"
                 rows={6}
                 placeholder="Describe your issue..."
-                className="resize-none"
+                className="resize-none dark:bg-input/60 dark:border-gray-700"
               />
             </div>
 
-            <Button variant="ghost" className="w-full justify-start text-primary">
-              <Paperclip className="w-4 h-4 mr-2" />
-              Attach files
-            </Button>
+            {statusMessage && (
+              <p className="text-sm text-center text-muted-foreground">{statusMessage}</p>
+            )}
 
-            <Button className="w-full" size="lg">
-              Submit ticket
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={async () => {
+                setStatusMessage(null)
+                if (!token) {
+                  setStatusMessage('You must be logged in to submit a ticket')
+                  return
+                }
+
+                if (!subject || !orderApiId) {
+                  setStatusMessage('Please provide subject and Order API ID')
+                  return
+                }
+
+                setLoading(true)
+                try {
+                  const res = await createTicket({ subject, message: (document.getElementById('message') as HTMLTextAreaElement)?.value || '', apiOrderId: orderApiId }, token)
+
+                  if (res.success) {
+                    setStatusMessage('Ticket submitted successfully')
+                    // clear fields
+                    setSubject('')
+                    setOrderApiId('')
+                    if (document.getElementById('message')) (document.getElementById('message') as HTMLTextAreaElement).value = ''
+                  } else {
+                    setStatusMessage(res.message || 'Failed to submit ticket')
+                  }
+                } catch (err) {
+                  console.error(err)
+                  setStatusMessage('Network error while submitting ticket')
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Submitting...' : 'Submit ticket'}
             </Button>
           </div>
         </Card>
 
         {/* My Support Requests */}
-        <Card className="p-6">
+        <Card className="p-6 h-fit">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Headphones className="w-5 h-5 text-primary" />
             My support requests
           </h2>
 
           <div className="space-y-3">
-            {tickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="p-4 rounded-lg border bg-card hover:border-primary/40 transition-all cursor-pointer group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
-                      S
+            {/* Render tickets from API if available, else fallback to static tickets */}
+            {(apiTickets ?? tickets).map((ticket: any) => {
+              const statusKey = (ticket.status || 'open').toLowerCase()
+              const statusClass =
+                statusKey === 'closed'
+                  ? 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-800 text-destructive'
+                  : statusKey === 'resolved'
+                  ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800 text-success'
+                  : statusKey === 'in-progress'
+                  ? 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800 text-accent'
+                  : 'bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-800 text-warning'
+
+              return (
+                <div
+                  key={ticket._id ?? ticket.id}
+                  className="p-4 rounded-lg border bg-card hover:border-primary/40 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
+                        S
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium group-hover:text-primary transition-colors">
+                          {ticket.subject ?? ticket.title}
+                        </p>
+                        {/* Status badge */}
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>{(ticket.status || 'open')}</span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium group-hover:text-primary transition-colors">
-                        #{ticket.id} - {ticket.title}
-                      </p>
-                      <p className={`text-sm font-medium ${ticket.statusColor}`}>
-                        {ticket.status}
-                      </p>
-                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {ticket.createdAt ?? ticket.date}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {ticket.date}
-                  </span>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
+
+      
         </Card>
       </div>
     </div>

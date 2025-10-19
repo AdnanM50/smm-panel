@@ -106,5 +106,18 @@ export function getStatusColor(status: string): string {
 }
 
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleString()
+  try {
+    return new Date(dateString).toLocaleDateString()
+  } catch (e) {
+    return dateString
+  }
+}
+
+export function formatTime(dateString: string): string {
+  try {
+    // 24-hour format HH:MM:SS
+    return new Date(dateString).toLocaleTimeString([], { hour12: false })
+  } catch (e) {
+    return ''
+  }
 }

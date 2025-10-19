@@ -9,7 +9,7 @@ import { Search, Filter, MoreVertical, X, AlertTriangle, RefreshCw } from "lucid
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { getUserOrders, cancelOrders, getStatusColor, formatDate, type Order } from "./order-api";
+import { getUserOrders, cancelOrders, getStatusColor, formatDate, formatTime, type Order } from "./order-api";
 
 export default function Orders() {
   const { token } = useAuth()
@@ -293,9 +293,7 @@ export default function Orders() {
                         Qty: {order.quantity}
                       </Badge>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(order.createdAt)}
-                    </span>
+                    <span className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</span>
                   </div>
                   
                   <div>
@@ -352,9 +350,7 @@ export default function Orders() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(order.createdAt)}
-                    </span>
+                    <span className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</span>
                     {order.status.toLowerCase() === 'processing' && (
                       <Button 
                         variant="destructive" 
@@ -409,7 +405,7 @@ export default function Orders() {
             </div>
           )}
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <DialogFooter className="flex-col sm:flex-row gap-2 ">
             <Button
               variant="outline"
               onClick={() => setCancelModalOpen(false)}
