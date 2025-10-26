@@ -23,7 +23,7 @@ const ServicesContext = createContext<ServicesContextType | undefined>(undefined
 const CACHE_DURATION = 5 * 60 * 1000
 
 export function ServicesProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth()
+  const { token, validateToken } = useAuth()
   const [services, setServices] = useState<ApiServiceItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,6 +46,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // Validate token before making API calls
+    if (token && !(await validateToken())) {
+      setError('Authentication expired. Please login again.')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
     setLoadingProgress({ currentPage: 0, totalPages: null })
@@ -59,16 +65,24 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       // Fetch all pages of data
       while (hasMorePages) {
         setLoadingProgress({ currentPage: page, totalPages: null })
-        
-        const pageData = await fetchServicesFromApi({ 
-          profit: 10, 
-          page,
-          limit,
-          token: token ?? undefined 
-        })
-        
+        const pageData = await fetchServicesFromApi({ profit: 10, page, limit, token: token ?? undefined })
+
+        // If the upstream returned an empty page (e.g., unauthorized), count and break after several
+        // consecutive empty pages to avoid long loops.
+        if (pageData.length === 0) {
+          // If we have no data at all after first page, surface a friendly error and stop
+          if (page === 1 && allServices.length === 0) {
+            console.warn('No services returned from upstream API (first page empty)')
+            setError('Unable to fetch services. Please check your authentication.')
+            break
+          }
+
+          // Otherwise, consider this the end of pages
+          break
+        }
+
         allServices = [...allServices, ...pageData]
-        
+
         // If we get less than the limit, we've reached the last page
         hasMorePages = pageData.length === limit
         page++

@@ -1,3 +1,4 @@
+// components/services/service-api.ts
 export interface ApiServiceItem {
   service: number
   name: string
@@ -17,6 +18,7 @@ export interface FetchServicesParams {
   page?: number
   limit?: number
   token?: string
+  signal?: AbortSignal | undefined
   apiBaseUrl?: string
 }
 
@@ -28,7 +30,7 @@ export interface ServicesResponse {
 const DEFAULT_API_BASE_URL = 'https://smm-panel-khan-it.onrender.com/api'
 
 // In-memory cache for per-page results across client navigations
-// Keyed by `${profit}:${page}:${limit}` (token is not included intentionally if it's stable per user)
+// Keyed by `${profit}:${page}:${limit}` (token intentionally excluded)
 const pageCache: Map<string, { timestamp: number; data: ApiServiceItem[] }> = new Map()
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
@@ -38,6 +40,7 @@ export async function fetchServicesFromApi({
   limit = 100,
   token,
   apiBaseUrl = DEFAULT_API_BASE_URL,
+  signal,
 }: FetchServicesParams): Promise<ApiServiceItem[]> {
   const cacheKey = `${profit}:${page}:${limit}`
   const cached = pageCache.get(cacheKey)
@@ -51,18 +54,35 @@ export async function fetchServicesFromApi({
     limit: limit.toString(),
   })
 
-  const response = await fetch(`${apiBaseUrl}/getServicesFromAPI?${params}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { token } : {}),
-    },
-    // Next.js automatic caching - cache for 5 minutes
-    next: { revalidate: 300 }
-  })
+  let response: Response
+  try {
+    response = await fetch(`${apiBaseUrl}/getServicesFromAPI?${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { token } : {}),
+      },
+      // support aborting client-side searches
+      ...(signal ? { signal } : {}),
+      // For Next.js client/server, you may control caching. This line is okay for server fetch in Next 13+.
+      next: { revalidate: 300 },
+    })
+  } catch (err) {
+    // Network error or similar - don't throw, return empty and let callers decide
+    console.warn('fetchServicesFromApi: network/fetch error', err)
+    return []
+  }
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch services (${response.status})`)
+    // Handle 401 specifically - token might be expired
+    if (response.status === 401) {
+      console.warn(`fetchServicesFromApi: token expired or invalid (${response.status})`)
+      // Clear cache to force fresh fetch with new token
+      pageCache.clear()
+    } else {
+      console.warn(`fetchServicesFromApi: upstream returned ${response.status} ${response.statusText}`)
+    }
+    return []
   }
 
   const data: ServicesResponse = await response.json()
@@ -71,7 +91,10 @@ export async function fetchServicesFromApi({
   }
 
   const result = data.services as ApiServiceItem[]
-  pageCache.set(cacheKey, { timestamp: Date.now(), data: result })
+  // Only cache non-empty results to avoid caching auth/empty states.
+  if (result && result.length > 0) {
+    pageCache.set(cacheKey, { timestamp: Date.now(), data: result })
+  }
   return result
 }
 
@@ -82,18 +105,19 @@ export async function fetchServicesGradually({
   limit = 100,
   token,
   apiBaseUrl = DEFAULT_API_BASE_URL,
+  signal,
 }: {
   profit?: number
   maxPages?: number
   limit?: number
   token?: string
   apiBaseUrl?: string
+  signal?: AbortSignal | undefined
 }): Promise<ApiServiceItem[]> {
   let allServices: ApiServiceItem[] = []
   let page = 1
   let hasMorePages = true
 
-  // Fetch pages gradually (max 20 pages at a time)
   while (hasMorePages && page <= maxPages) {
     try {
       const pageData = await fetchServicesFromApi({
@@ -102,20 +126,26 @@ export async function fetchServicesGradually({
         limit,
         token,
         apiBaseUrl,
+        signal,
       })
-      
+      // If the very first page is empty, likely upstream refused or returned no data;
+      // stop early and return whatever we've gathered so far (probably empty).
+      if (page === 1 && pageData.length === 0) {
+        console.warn('fetchServicesGradually: first page empty, stopping to avoid long scans')
+        break
+      }
+
       allServices = [...allServices, ...pageData]
-      
-      // If we get less than the limit, we've reached the last page
       hasMorePages = pageData.length === limit
       page++
-      
     } catch (error) {
-      console.error(`Error fetching page ${page}:`, error)
-      break
+      // Log a warning and continue to next page. This avoids failing the
+      // entire fetch when one page errors (e.g., intermittent network issues).
+      console.warn(`Warning: failed to fetch page ${page}, skipping:`, error)
+      page++
     }
   }
-  
+
   return allServices
 }
 
@@ -124,17 +154,14 @@ export function clearServicesCache() {
 }
 
 function sanitizeGroupName(raw: string): string {
-  // Take the first word token and clean up symbols/brackets
   const trimmed = raw.trim()
   if (!trimmed) return 'Other'
-  // Prefer category words like "Instagram", "YouTube", etc.
   const firstToken = trimmed
     .replace(/\[/g, ' ')
     .replace(/\]/g, ' ')
     .replace(/\s+/g, ' ')
     .split(' ')[0]
 
-  // Normalize common platform casings
   const normalized = firstToken
     .replace(/instagram/i, 'Instagram')
     .replace(/youtube/i, 'YouTube')
@@ -151,7 +178,31 @@ function sanitizeGroupName(raw: string): string {
 export function groupServicesByPlatform(services: ApiServiceItem[]): Record<string, ApiServiceItem[]> {
   const groups: Record<string, ApiServiceItem[]> = {}
 
+  // Helper: detect platform from name or category using keywords.
+  function detectPlatform(svc: ApiServiceItem): string | null {
+    const hay = `${svc.category || ''} ${svc.name || ''}`.toLowerCase()
+    if (/tiktok/.test(hay)) return 'TikTok'
+    if (/facebook/.test(hay)) return 'Facebook'
+    if (/instagram/.test(hay)) return 'Instagram'
+    if (/youtube/.test(hay)) return 'YouTube'
+    if (/telegram/.test(hay)) return 'Telegram'
+    if (/twitter|x\.?com?/.test(hay)) return 'Twitter'
+    if (/snap(chat)?/.test(hay)) return 'Snapchat'
+    if (/rumble/.test(hay)) return 'Rumble'
+    return null
+  }
+
   services.forEach((svc) => {
+    // Prefer explicit platform detection from name/category. This avoids
+    // creating a "NEW" group when upstream uses "NEW" as a category token.
+    const detected = detectPlatform(svc)
+    if (detected) {
+      if (!groups[detected]) groups[detected] = []
+      groups[detected].push(svc)
+      return
+    }
+
+    // Fallback to previous sanitize logic when no platform keyword found.
     const byCategory = svc.category ? sanitizeGroupName(svc.category) : undefined
     const byName = svc.name ? sanitizeGroupName(svc.name) : 'Other'
     const key = byCategory && byCategory !== 'Other' ? byCategory : byName
@@ -161,5 +212,3 @@ export function groupServicesByPlatform(services: ApiServiceItem[]): Record<stri
 
   return groups
 }
-
-
