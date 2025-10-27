@@ -125,6 +125,16 @@ export function useDashboardData() {
     fetchDashboardData()
   }, [fetchDashboardData])
 
+
+  useEffect(() => {
+    if (token) {
+      // forceRefresh=true so we don't return stale cached data immediately
+      fetchDashboardData(true)
+    }
+    // Intentionally only react to token changes here
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
+
   // Refresh function for manual refresh
   const refresh = useCallback(() => {
     fetchDashboardData(true)
