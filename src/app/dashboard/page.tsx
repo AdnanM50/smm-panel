@@ -48,6 +48,8 @@ export default function Dashboard() {
   const [link, setLink] = useState("")
   const [quantity, setQuantity] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Platform filtering state
+  const [selectedPlatform, setSelectedPlatform] = useState<string>("All")
   // Mass order mode state
   const [isMassMode, setIsMassMode] = useState(false)
   const [moInput, setMoInput] = useState("")
@@ -58,7 +60,7 @@ export default function Dashboard() {
   const [moErrors, setMoErrors] = useState<string[]>([])
 
   // Service search functionality
-  const searchServices = useCallback(async (query: string) => {
+  const searchServices = useCallback(async (query: string, platformFilter?: string) => {
     if (!token || !query.trim()) {
       setServices([])
       return
@@ -86,7 +88,7 @@ export default function Dashboard() {
       }
 
       // Filter services based on search query
-      const filteredServices = allServices.filter(service => {
+      let filteredServices = allServices.filter(service => {
         const queryLower = query.toLowerCase()
         return (
           service.name.toLowerCase().includes(queryLower) ||
@@ -95,6 +97,8 @@ export default function Dashboard() {
         )
       })
 
+      // When searching, show all matching results regardless of platform filter
+      // This allows users to search for anything even when a platform is selected
       setServices(filteredServices.slice(0, 50)) // Limit to 50 results
     } catch (error) {
       console.error('Error searching services:', error)
@@ -108,7 +112,7 @@ export default function Dashboard() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim()) {
-        searchServices(searchQuery)
+        searchServices(searchQuery) // Don't pass platform filter when searching
       } else {
         setServices([])
         setSelectedService(null)
@@ -140,10 +144,27 @@ export default function Dashboard() {
         if (cancelled) return
         const grouped = groupServicesByPlatform(all)
         const names = Object.keys(grouped).sort()
-        setDynamicPlatforms(names)
+        
+        // Fallback platforms if API doesn't return any
+        const fallbackPlatforms = ['Facebook', 'Instagram', 'YouTube', 'Twitter', 'TikTok', 'Spotify', 'Twitch']
+        
+        // Use API platforms if available, otherwise use fallback
+        const finalPlatforms = names.length > 0 ? names : fallbackPlatforms
+        
+        // Ensure Twitter is included in the platform list
+        const platformsWithTwitter = finalPlatforms.includes('Twitter') ? finalPlatforms : [...finalPlatforms, 'Twitter']
+        setDynamicPlatforms(platformsWithTwitter)
+        
+        console.log('Platforms loaded:', platformsWithTwitter)
       } catch (err) {
         // Silent fail - keep design unchanged
         console.warn('Failed to load dynamic platforms for dashboard', err)
+        // Set fallback platforms if API fails
+        if (!cancelled) {
+          const fallbackPlatforms = ['Facebook', 'Instagram', 'YouTube', 'Twitter', 'TikTok', 'Spotify', 'Twitch']
+          setDynamicPlatforms(fallbackPlatforms)
+          console.log('Using fallback platforms:', fallbackPlatforms)
+        }
       }
     })()
 
@@ -245,6 +266,73 @@ export default function Dashboard() {
     setSelectedService(service)
     setSearchQuery(service.name)
     setServices([])
+  }
+
+  // Handle platform selection
+  const handlePlatformSelect = async (platform: string) => {
+    setSelectedPlatform(platform)
+    
+    if (platform === "All") {
+      setServices([])
+      setSearchQuery("")
+      return
+    }
+    
+    // Only auto-fetch platform services if no search query is active
+    if (!searchQuery.trim()) {
+      // Auto-fetch services for the selected platform
+      setIsSearching(true)
+      try {
+        // Fetch services and filter by platform
+        let allServices: ApiServiceItem[] = []
+        let page = 1
+        const limit = 100
+        let hasMorePages = true
+
+        // Fetch more pages to ensure we get platform services
+        while (hasMorePages && page <= 10) { // Increased to 10 pages
+          const pageServices = await fetchServicesFromApi({
+            profit: 10,
+            page,
+            limit,
+            token,
+          })
+          
+          allServices = [...allServices, ...pageServices]
+          hasMorePages = pageServices.length === limit
+          page++
+        }
+
+        console.log(`Fetched ${allServices.length} total services for platform: ${platform}`)
+
+        // Filter services by platform
+        const grouped = groupServicesByPlatform(allServices)
+        console.log('Available platforms:', Object.keys(grouped))
+        console.log(`${platform} services:`, grouped[platform]?.length || 0)
+        
+        const platformServices = grouped[platform] || []
+        
+        setServices(platformServices.slice(0, 50)) // Limit to 50 results
+        
+        if (platformServices.length === 0) {
+          console.warn(`No services found for platform: ${platform}`)
+          toast.info(`No ${platform} services found. Try selecting a different platform.`)
+        }
+      } catch (error) {
+        console.error('Error fetching platform services:', error)
+        toast.error("Failed to load services")
+      } finally {
+        setIsSearching(false)
+      }
+    }
+  }
+
+  // Get platform-specific search placeholder
+  const getSearchPlaceholder = () => {
+    if (selectedPlatform === "All") {
+      return "Search services by name or ID..."
+    }
+    return `Search ${selectedPlatform} services by name or ID... (or search anything)`
   }
 
   // Calculate total charge
@@ -415,14 +503,31 @@ export default function Dashboard() {
                 <div className="marquee-track">
                   {[...Array(2)].map((_, loopIndex) => (
                     <div key={loopIndex} className="marquee-group inline-flex items-center gap-2 pr-4" aria-hidden={loopIndex === 1}>
-                      <Button size="sm" className="whitespace-nowrap" style={{ backgroundColor: 'var(--dashboard-blue)' }}>
+                      <Button 
+                        size="sm" 
+                        className="whitespace-nowrap" 
+                        style={{ backgroundColor: selectedPlatform === 'All' ? 'var(--dashboard-blue)' : 'var(--input)', color: selectedPlatform === 'All' ? 'white' : 'var(--dashboard-text-primary)' }}
+                        onClick={() => handlePlatformSelect('All')}
+                      >
                         <Plus className="h-4 w-4 mr-1" />
                         All
                       </Button>
                       {dynamicPlatforms.map((name) => {
                         const IconComponent = iconMap[name] || Plus
+                        const isSelected = selectedPlatform === name
                         return (
-                          <Button key={`${name}-${loopIndex}`} size="sm" variant="outline" className="whitespace-nowrap" style={{ borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}>
+                          <Button 
+                            key={`${name}-${loopIndex}`} 
+                            size="sm" 
+                            variant="outline" 
+                            className="whitespace-nowrap" 
+                            style={{ 
+                              backgroundColor: isSelected ? 'var(--dashboard-blue)' : 'var(--input)', 
+                              borderColor: isSelected ? 'var(--dashboard-blue)' : 'var(--border)', 
+                              color: isSelected ? 'white' : 'var(--dashboard-text-primary)' 
+                            }}
+                            onClick={() => handlePlatformSelect(name)}
+                          >
                             <IconComponent className="h-4 w-4 mr-1" />
                             {name}
                           </Button>
@@ -482,11 +587,11 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <>
-                  {/* Service Search Bar */}
+                  {/* Service Search Bar - Always visible */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--dashboard-text-muted)' }} />
                     <Input 
-                      placeholder="Search services by name or ID..." 
+                      placeholder={getSearchPlaceholder()} 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10" 
@@ -499,8 +604,69 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Search Results */}
-                  {services.length > 0 && (
+                  {/* Platform Services List - Show when platform is selected */}
+                  {selectedPlatform !== "All" && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold" style={{ color: 'var(--dashboard-text-primary)' }}>
+                          {selectedPlatform} Services
+                        </h3>
+                        {isSearching && (
+                          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--dashboard-text-muted)' }}>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                            Loading...
+                          </div>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto border rounded-lg bg-background">
+                        {isSearching ? (
+                          // Skeleton loaders for services
+                          <div className="space-y-2 p-2">
+                            {[...Array(5)].map((_, index) => (
+                              <div key={index} className="p-3 border-b last:border-b-0">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-3 w-1/2" />
+                                  </div>
+                                  <Skeleton className="h-3 w-16" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : services.length > 0 ? (
+                          services.map((service) => (
+                            <div
+                              key={service.service}
+                              onClick={() => handleServiceSelect(service)}
+                              className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">
+                                    {service.service} - {service.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Rate: ${service.userRate || service.rate} | Min: {service.min} | Max: {service.max}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {service.category}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-6 text-center text-muted-foreground">
+                            No {selectedPlatform} services found
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Search Results - Only show when All is selected and searching */}
+                  {selectedPlatform === "All" && services.length > 0 && (
                     <div className="max-h-60 overflow-y-auto border rounded-lg bg-background">
                       {services.map((service) => (
                         <div
@@ -523,24 +689,6 @@ export default function Dashboard() {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  )}
-
-                  {/* Selected Service Display */}
-                  {selectedService && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium" style={{ color: 'var(--dashboard-text-primary)' }}>Selected Service</Label>
-                      <div className="p-3 rounded-lg border bg-muted/50">
-                        <div className="font-medium text-sm">
-                          {selectedService.service} - {selectedService.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Rate: ${selectedService.userRate || selectedService.rate} | Min: {selectedService.min} | Max: {selectedService.max}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Category: {selectedService.category}
-                        </div>
-                      </div>
                     </div>
                   )}
 

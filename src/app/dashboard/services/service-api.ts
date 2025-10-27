@@ -181,14 +181,22 @@ export function groupServicesByPlatform(services: ApiServiceItem[]): Record<stri
   // Helper: detect platform from name or category using keywords.
   function detectPlatform(svc: ApiServiceItem): string | null {
     const hay = `${svc.category || ''} ${svc.name || ''}`.toLowerCase()
-    if (/tiktok/.test(hay)) return 'TikTok'
-    if (/facebook/.test(hay)) return 'Facebook'
-    if (/instagram/.test(hay)) return 'Instagram'
-    if (/youtube/.test(hay)) return 'YouTube'
-    if (/telegram/.test(hay)) return 'Telegram'
-    if (/twitter|x\.?com?/.test(hay)) return 'Twitter'
-    if (/snap(chat)?/.test(hay)) return 'Snapchat'
-    if (/rumble/.test(hay)) return 'Rumble'
+    
+    // More comprehensive platform detection
+    if (/tiktok|tiktok\.com/.test(hay)) return 'TikTok'
+    if (/facebook|fb\.com|facebook\.com/.test(hay)) return 'Facebook'
+    if (/instagram|ig\.com|instagram\.com/.test(hay)) return 'Instagram'
+    if (/youtube|yt\.com|youtube\.com|youtu\.be/.test(hay)) return 'YouTube'
+    if (/telegram|t\.me|telegram\.me/.test(hay)) return 'Telegram'
+    if (/twitter|x\.com|twitter\.com/.test(hay)) return 'Twitter'
+    if (/snapchat|snap\.chat|snapchat\.com/.test(hay)) return 'Snapchat'
+    if (/rumble|rumble\.com/.test(hay)) return 'Rumble'
+    if (/spotify|spotify\.com/.test(hay)) return 'Spotify'
+    if (/twitch|twitch\.tv/.test(hay)) return 'Twitch'
+    if (/linkedin|linkedin\.com/.test(hay)) return 'LinkedIn'
+    if (/discord|discord\.com|discord\.gg/.test(hay)) return 'Discord'
+    if (/soundcloud|soundcloud\.com/.test(hay)) return 'SoundCloud'
+    
     return null
   }
 
