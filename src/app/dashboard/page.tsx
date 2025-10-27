@@ -79,7 +79,7 @@ export default function Dashboard() {
           profit: 10,
           page,
           limit,
-          token,
+          token: token || undefined,
         })
         
         allServices = [...allServices, ...pageServices]
@@ -134,7 +134,7 @@ export default function Dashboard() {
         let page = 1
         const limit = 100
         while (page <= 3) {
-          const pageSvcs = await fetchServicesFromApi({ profit: 10, page, limit, token })
+          const pageSvcs = await fetchServicesFromApi({ profit: 10, page, limit, token: token || undefined })
           if (!pageSvcs || pageSvcs.length === 0) break
           all = all.concat(pageSvcs)
           if (pageSvcs.length < limit) break
@@ -295,7 +295,7 @@ export default function Dashboard() {
             profit: 10,
             page,
             limit,
-            token,
+            token: token || undefined,
           })
           
           allServices = [...allServices, ...pageServices]

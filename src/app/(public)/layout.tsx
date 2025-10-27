@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono'
 
 export const metadata: Metadata = {
   title: "BEST SMM - Professional SMM Panel",
-  description: "Professional SMM Panel for social media marketing services.",
+  // description: "Professional SMM Panel for social media marketing services.",
 };
 
 export default function RootLayout({
