@@ -467,9 +467,9 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3 lg:grid-cols-3">
         {/* Create Order */}
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2 lg:col-span-2">
           <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2" style={{ color: 'var(--dashboard-text-primary)' }}>
@@ -481,8 +481,13 @@ export default function Dashboard() {
               {/* Order Type Buttons */}
               <div className="flex gap-2">
                 <Button
+                  variant={isMassMode ? 'outline' : 'default'}
                   className="flex-1"
-                  style={{ backgroundColor: isMassMode ? 'var(--input)' : 'var(--dashboard-blue)' }}
+                  style={{
+                    borderColor: isMassMode ? 'var(--border)' : undefined,
+                    backgroundColor: isMassMode ? 'var(--input)' : 'var(--dashboard-blue)',
+                    color: isMassMode ? 'var(--dashboard-text-primary)' : undefined,
+                  }}
                   onClick={() => setIsMassMode(false)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -504,7 +509,7 @@ export default function Dashboard() {
                   {[...Array(2)].map((_, loopIndex) => (
                     <div key={loopIndex} className="marquee-group inline-flex items-center gap-2 pr-4" aria-hidden={loopIndex === 1}>
                       {/* Render the 'All' button only in the first group to avoid duplicate 'All' pills while keeping the marquee duplication for smooth scrolling */}
-                      {loopIndex === 0 && (
+                      {/* {loopIndex === 0 && (
                         <Button 
                           size="sm" 
                           className="whitespace-nowrap" 
@@ -514,11 +519,9 @@ export default function Dashboard() {
                           <Plus className="h-4 w-4 mr-1" />
                           All
                         </Button>
-                      )}
+                      )} */}
 
-                      {/* If this is the duplicated marquee group, render a skeleton placeholder
-                          in place of the 'All' pill so the scrolling track keeps consistent width
-                          but the 'All' label is not visible twice. */}
+           
                       {loopIndex === 1 && (
                         <div key={`skeleton-all-${loopIndex}`} className="h-8 px-3 py-1 rounded-full bg-muted/20 dark:bg-muted/10 animate-pulse" aria-hidden>
                         </div>
