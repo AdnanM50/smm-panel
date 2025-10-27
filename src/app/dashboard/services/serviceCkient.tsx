@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, Eye, ShoppingCart } from "lucide-react"
+import { Search, Eye, ShoppingCart, Copy, Check } from "lucide-react"
 import {
   Select,
   SelectTrigger,
@@ -25,7 +25,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { fetchServicesFromApi, groupServicesByPlatform, type ApiServiceItem } from "./service-api"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { useAuth } from "@/context/AuthContext"
+import { useToast } from "@/hooks/use-toster"
 
 interface Props {
   initialServices?: ApiServiceItem[]
@@ -45,6 +55,11 @@ export default function ServicesClient({ initialServices = [] }: Props) {
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<ApiServiceItem[]>([])
   const [isSearchLoading, setIsSearchLoading] = useState(false)
+  // Dialog for showing service details on "Review"
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedService, setSelectedService] = useState<ApiServiceItem | null>(null)
+  const [copied, setCopied] = useState(false)
+  const { toast } = useToast()
   
 
   // Refresh (client-side)
@@ -88,6 +103,22 @@ export default function ServicesClient({ initialServices = [] }: Props) {
 
   // Debounced search: wait until typing stops, then run a cancellable batched search.
   const debouncedQuery = useDebounce(query, 300)
+
+  const openReview = (svc: ApiServiceItem) => {
+    setSelectedService(svc)
+    setIsDialogOpen(true)
+  }
+
+  const copyId = async (id: number | string) => {
+    try {
+      await navigator.clipboard.writeText(String(id))
+      setCopied(true)
+      toast({ title: "Copied", description: `Service ID ${id} copied to clipboard.` })
+      setTimeout(() => setCopied(false), 1500)
+    } catch (e) {
+      toast({ title: "Copy failed", description: "Could not copy to clipboard.", variant: "destructive" })
+    }
+  }
 
   useEffect(() => {
     const q = debouncedQuery.trim()
@@ -333,7 +364,7 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                           <TableCell className="font-semibold">${service.rate.toFixed(4)}</TableCell>
                           <TableCell>{service.min} - {service.max}</TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => openReview(service)}>
                               <Eye className="mr-2 h-4 w-4" />
                               Review
                             </Button>
@@ -400,7 +431,7 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                         <TableCell className="font-semibold">${service.rate.toFixed(4)}</TableCell>
                         <TableCell>{service.min} - {service.max}</TableCell>
                         <TableCell>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => openReview(service)}>
                             <Eye className="mr-2 h-4 w-4" />
                             Review
                           </Button>
@@ -420,6 +451,69 @@ export default function ServicesClient({ initialServices = [] }: Props) {
           )
         })}
         {/* Pagination intentionally removed */}
+        {/* Review dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setSelectedService(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Service Details</DialogTitle>
+              <DialogDescription>
+                {selectedService ? `ID: ${selectedService.service}` : ""}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-3 mt-4">
+              {selectedService ? (
+                <div className="grid gap-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="text-muted-foreground">ID</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium">{selectedService.service}</div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyId(selectedService.service)} aria-label="Copy service id">
+                        {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-muted-foreground">Name</div>
+                    <div className="font-medium">{selectedService.name}</div>
+
+                    <div className="text-muted-foreground">Category</div>
+                    <div className="font-medium">{selectedService.category || "-"}</div>
+
+                    <div className="text-muted-foreground">Type</div>
+                    <div className="font-medium">{selectedService.type || "Default"}</div>
+
+                    <div className="text-muted-foreground">Rate (per 1000)</div>
+                    <div className="font-medium">${selectedService.rate.toFixed(4)}</div>
+
+                    <div className="text-muted-foreground">Min - Max</div>
+                    <div className="font-medium">{selectedService.min} - {selectedService.max}</div>
+
+                    <div className="text-muted-foreground">Flags</div>
+                    <div className="font-medium">{selectedService.dripped ? 'Drip' : ''} {selectedService.refill ? ' Refill' : ''} {selectedService.cancel ? ' Cancel' : ''}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">No service selected</div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <DialogClose>
+                <Button variant="outline">Close</Button>
+              </DialogClose>
+              <div>
+                <Button className="bg-gradient-primary" onClick={() => {
+                  if (selectedService) router.push(`/dashboard?service=${selectedService.service}`)
+                }}>
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Buy
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Card>
     </div>
   )
