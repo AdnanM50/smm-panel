@@ -29,8 +29,9 @@ import {
   Filter,
 } from "lucide-react";
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from "@/context/AuthContext";
-import { fetchServicesFromApi, groupServicesByPlatform, type ApiServiceItem } from "./services/service-api";
+import { fetchServicesFromApi, fetchServicesGradually, groupServicesByPlatform, type ApiServiceItem } from "./services/service-api";
 import { placeNewOrder, type PlaceOrderRequest } from "./order-api";
 import { toast } from "sonner";
 import { submitMassOrder, parseMassOrderInput, calculateTotalProfit, type MassOrderItem } from "./mass-order/massOrder-api";
@@ -48,6 +49,64 @@ export default function Dashboard() {
   const [link, setLink] = useState("")
   const [quantity, setQuantity] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Inline validation errors
+  const [linkError, setLinkError] = useState<string | null>(null)
+  const [quantityError, setQuantityError] = useState<string | null>(null)
+
+  // Validation helpers
+  const validateLink = (value: string) => {
+    const v = value.trim()
+    if (!v) {
+      setLinkError('Link is required')
+      return false
+    }
+    try {
+      const parsed = new URL(v)
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        setLinkError('Link must be http(s)')
+        return false
+      }
+    } catch (e) {
+      setLinkError('Enter a valid URL')
+      return false
+    }
+    setLinkError(null)
+    return true
+  }
+
+  const validateQuantity = (value: string) => {
+    const v = value.trim()
+    if (!v) {
+      setQuantityError('Quantity is required')
+      return false
+    }
+    const n = Number(v)
+    if (!Number.isFinite(n) || isNaN(n)) {
+      setQuantityError('Quantity must be a number')
+      return false
+    }
+    if (selectedService) {
+      if (n < selectedService.min) {
+        setQuantityError(`Minimum is ${selectedService.min}`)
+        return false
+      }
+      if (n > selectedService.max) {
+        setQuantityError(`Maximum is ${selectedService.max}`)
+        return false
+      }
+    }
+    setQuantityError(null)
+    return true
+  }
+
+  useEffect(() => {
+    // re-validate quantity when selected service changes
+    if (selectedService && quantity) {
+      validateQuantity(quantity)
+    } else {
+      setQuantityError(null)
+    }
+  }, [selectedService])
   // Platform filtering state
   const [selectedPlatform, setSelectedPlatform] = useState<string>("All")
   // Mass order mode state
@@ -266,7 +325,54 @@ export default function Dashboard() {
     setSelectedService(service)
     setSearchQuery(service.name)
     setServices([])
+    // Reset quantity and validate against new service limits
+    setQuantity('')
+    setQuantityError(null)
   }
+
+  // Pre-fill when arriving from services list: ?service=<id>
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const svcParam = searchParams.get('service')
+    if (!svcParam) return
+
+    let cancelled = false
+    ;(async () => {
+      const id = Number(svcParam)
+      if (isNaN(id)) return
+
+      // Try to find the service by fetching a few pages gradually
+      try {
+        const all = await fetchServicesGradually({ profit: 10, maxPages: 6, limit: 100, token: token || undefined })
+        if (cancelled) return
+        const found = all.find((s) => s.service === id)
+        if (found) {
+          setSelectedService(found)
+          setSearchQuery(found.name)
+          // infer platform and set selectedPlatform for UI clarity
+          const grouped = groupServicesByPlatform([found])
+          const platform = Object.keys(grouped)[0] || 'All'
+          setSelectedPlatform(platform)
+
+          // remove the param from URL to avoid re-running this effect repeatedly
+          try {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('service')
+            router.replace(url.pathname + url.search)
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to prefill service from query param', err)
+      }
+    })()
+
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, token])
 
   // Handle platform selection
   const handlePlatformSelect = async (platform: string) => {
@@ -358,6 +464,18 @@ export default function Dashboard() {
     const qty = parseFloat(quantity)
     if (isNaN(qty) || qty < selectedService.min || qty > selectedService.max) {
       toast.error(`Quantity must be between ${selectedService.min} and ${selectedService.max}`)
+      return
+    }
+
+    // Final link validation before submit
+    try {
+      const parsed = new URL(link.trim())
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        toast.error('Link must be a valid http(s) URL')
+        return
+      }
+    } catch (e) {
+      toast.error('Link must be a valid URL')
       return
     }
 
@@ -509,45 +627,57 @@ export default function Dashboard() {
                   {[...Array(2)].map((_, loopIndex) => (
                     <div key={loopIndex} className="marquee-group inline-flex items-center gap-2 pr-4" aria-hidden={loopIndex === 1}>
                       {/* Render the 'All' button only in the first group to avoid duplicate 'All' pills while keeping the marquee duplication for smooth scrolling */}
-                      {/* {loopIndex === 0 && (
-                        <Button 
-                          size="sm" 
-                          className="whitespace-nowrap" 
-                          style={{ backgroundColor: selectedPlatform === 'All' ? 'var(--dashboard-blue)' : 'var(--input)', color: selectedPlatform === 'All' ? 'white' : 'var(--dashboard-text-primary)' }}
-                          onClick={() => handlePlatformSelect('All')}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          All
-                        </Button>
-                      )} */}
-
-           
-                      {loopIndex === 1 && (
-                        <div key={`skeleton-all-${loopIndex}`} className="h-8 px-3 py-1 rounded-full bg-muted/20 dark:bg-muted/10 animate-pulse" aria-hidden>
-                        </div>
-                      )}
-
-                      {dynamicPlatforms.map((name) => {
-                        const IconComponent = iconMap[name] || Plus
-                        const isSelected = selectedPlatform === name
-                        return (
-                          <Button 
-                            key={`${name}-${loopIndex}`} 
-                            size="sm" 
-                            variant="outline" 
-                            className="whitespace-nowrap" 
-                            style={{ 
-                              backgroundColor: isSelected ? 'var(--dashboard-blue)' : 'var(--input)', 
-                              borderColor: isSelected ? 'var(--dashboard-blue)' : 'var(--border)', 
-                              color: isSelected ? 'white' : 'var(--dashboard-text-primary)' 
+                      {/* If platforms haven't loaded yet (initial login), show skeleton pills instead of the real buttons */}
+                      {dynamicPlatforms.length === 0 ? (
+                        <>
+                          {/* Improved skeleton pills: three rounded placeholders with varied widths for a more natural placeholder look */}
+                          <div className="inline-flex items-center gap-2" aria-hidden={loopIndex === 1}>
+                            <Skeleton className="h-8 w-14 rounded-full" />
+                            <Skeleton className="h-8 w-10 rounded-full" />
+                            <Skeleton className="h-8 w-20 rounded-full" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* Render the 'All' pill in both duplicated groups so the marquee never shows a gap.
+                              The second copy is marked aria-hidden to avoid duplicate spoken content for screen readers. */}
+                          <Button
+                            size="sm"
+                            className="whitespace-nowrap"
+                            style={{
+                              backgroundColor: selectedPlatform === 'All' ? 'var(--dashboard-blue)' : 'var(--input)',
+                              color: selectedPlatform === 'All' ? 'white' : 'var(--dashboard-text-primary)'
                             }}
-                            onClick={() => handlePlatformSelect(name)}
+                            onClick={() => handlePlatformSelect('All')}
+                            aria-hidden={loopIndex === 1}
                           >
-                            <IconComponent className="h-4 w-4 mr-1" />
-                            {name}
+                            <Plus className="h-4 w-4 mr-1" />
+                            All
                           </Button>
-                        )
-                      })}
+
+                          {dynamicPlatforms.map((name) => {
+                            const IconComponent = iconMap[name] || Plus
+                            const isSelected = selectedPlatform === name
+                            return (
+                              <Button
+                                key={`${name}-${loopIndex}`}
+                                size="sm"
+                                variant="outline"
+                                className="whitespace-nowrap"
+                                style={{
+                                  backgroundColor: isSelected ? 'var(--dashboard-blue)' : 'var(--input)',
+                                  borderColor: isSelected ? 'var(--dashboard-blue)' : 'var(--border)',
+                                  color: isSelected ? 'white' : 'var(--dashboard-text-primary)'
+                                }}
+                                onClick={() => handlePlatformSelect(name)}
+                              >
+                                <IconComponent className="h-4 w-4 mr-1" />
+                                {name}
+                              </Button>
+                            )
+                          })}
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -619,63 +749,91 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Platform Services List - Show when platform is selected */}
-                  {selectedPlatform !== "All" && (
+                  {/* Platform Services List - Show when platform is selected
+                      Behavior change: hide this entire block when the search input is empty (user requested).
+                      If a specific service is selected, show only that service entry. */}
+                  {selectedPlatform !== "All" && (searchQuery.trim() !== '' || selectedService || isSearching || services.length > 0) && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold" style={{ color: 'var(--dashboard-text-primary)' }}>
                           {selectedPlatform} Services
                         </h3>
-                        {isSearching && (
-                          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--dashboard-text-muted)' }}>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                            Loading...
-                          </div>
-                        )}
+                        {/* Removed inline 'Loading...' label and spinner to declutter the header; keep skeletons in the list below for loading feedback. */}
                       </div>
                       <div className="max-h-80 overflow-y-auto border rounded-lg bg-background">
-                        {isSearching ? (
-                          // Skeleton loaders for services
-                          <div className="space-y-2 p-2">
-                            {[...Array(5)].map((_, index) => (
-                              <div key={index} className="p-3 border-b last:border-b-0">
+                        {(() => {
+                          if (selectedService) {
+                            return (
+                              <div
+                                key={selectedService.service}
+                                onClick={() => handleServiceSelect(selectedService)}
+                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors"
+                              >
                                 <div className="flex items-center justify-between">
-                                  <div className="flex-1 space-y-2">
-                                    <Skeleton className="h-4 w-3/4" />
-                                    <Skeleton className="h-3 w-1/2" />
-                                  </div>
-                                  <Skeleton className="h-3 w-16" />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : services.length > 0 ? (
-                          services.map((service) => (
-                            <div
-                              key={service.service}
-                              onClick={() => handleServiceSelect(service)}
-                              className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">
-                                    {service.service} - {service.name}
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">
+                                      {selectedService.service} - {selectedService.name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      Rate: ${selectedService.userRate || selectedService.rate} | Min: {selectedService.min} | Max: {selectedService.max}
+                                    </div>
                                   </div>
                                   <div className="text-xs text-muted-foreground">
-                                    Rate: ${service.userRate || service.rate} | Min: {service.min} | Max: {service.max}
+                                    {selectedService.category}
                                   </div>
                                 </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {service.category}
+                              </div>
+                            )
+                          }
+
+                          if (isSearching) {
+                            return (
+                              <div className="space-y-2 p-2">
+                                {[...Array(5)].map((_, index) => (
+                                  <div key={index} className="p-3 border-b last:border-b-0">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1 space-y-2">
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <Skeleton className="h-3 w-1/2" />
+                                      </div>
+                                      <Skeleton className="h-3 w-16" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          }
+
+                          if (services.length > 0) {
+                            return services.map((service) => (
+                              <div
+                                key={service.service}
+                                onClick={() => handleServiceSelect(service)}
+                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">
+                                      {service.service} - {service.name}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      Rate: ${service.userRate || service.rate} | Min: {service.min} | Max: {service.max}
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {service.category}
+                                  </div>
                                 </div>
                               </div>
+                            ))
+                          }
+
+                          return (
+                            <div className="p-6 text-center text-muted-foreground">
+                              No {selectedPlatform} services found
                             </div>
-                          ))
-                        ) : (
-                          <div className="p-6 text-center text-muted-foreground">
-                            No {selectedPlatform} services found
-                          </div>
-                        )}
+                          )
+                        })()}
                       </div>
                     </div>
                   )}
@@ -713,9 +871,15 @@ export default function Dashboard() {
                     <Input
                       placeholder="Enter your link"
                       value={link}
-                      onChange={(e) => setLink(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setLink(v)
+                        validateLink(v)
+                      }}
+                      onBlur={() => validateLink(link)}
                       style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}
                     />
+                    {linkError && <div className="text-sm text-red-500 mt-2">{linkError}</div>}
                   </div>
 
                   {/* Quantity Input */}
@@ -727,11 +891,17 @@ export default function Dashboard() {
                       type="number"
                       placeholder="Enter quantity"
                       value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setQuantity(v)
+                        validateQuantity(v)
+                      }}
+                      onBlur={() => validateQuantity(quantity)}
                       min={selectedService?.min || 0}
                       max={selectedService?.max || 999999}
                       style={{ backgroundColor: 'var(--input)', borderColor: 'var(--border)', color: 'var(--dashboard-text-primary)' }}
                     />
+                    {quantityError && <div className="text-sm text-red-500 mt-2">{quantityError}</div>}
                   </div>
 
                   {/* Total Charge Display */}
@@ -749,7 +919,7 @@ export default function Dashboard() {
                     className="w-full" 
                     style={{ backgroundColor: 'var(--dashboard-blue)', fontSize: '1.125rem', padding: '1.5rem 0' }}
                     onClick={handleSubmitOrder}
-                    disabled={!selectedService || !link.trim() || !quantity.trim() || isSubmitting}
+                    disabled={!selectedService || !link.trim() || !quantity.trim() || !!linkError || !!quantityError || isSubmitting}
                   >
                     {isSubmitting ? (
                       <>

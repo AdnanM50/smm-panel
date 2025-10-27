@@ -1,6 +1,7 @@
 // components/services/ServicesClient.tsx
 "use client"
 import React, { useEffect, useMemo, useState } from "react"
+import { useRouter } from 'next/navigation'
 import useDebounce from "@/hooks/useDebounce"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,7 @@ interface Props {
 
 export default function ServicesClient({ initialServices = [] }: Props) {
   const { token, validateToken } = useAuth()
+  const router = useRouter()
 
   const [allServices, setAllServices] = useState<ApiServiceItem[]>(initialServices)
   const [isLoading, setIsLoading] = useState(false)
@@ -337,7 +339,7 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                             </Button>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button className="bg-gradient-primary" size="sm">
+                            <Button className="bg-gradient-primary" size="sm" onClick={() => router.push(`/dashboard?service=${service.service}`)}>
                               <ShoppingCart className="mr-2 h-4 w-4" />
                               Buy
                             </Button>
@@ -404,7 +406,7 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                           </Button>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button className="bg-gradient-primary" size="sm">
+                          <Button className="bg-gradient-primary" size="sm" onClick={() => router.push(`/dashboard?service=${service.service}`)}>
                             <ShoppingCart className="mr-2 h-4 w-4" />
                             Buy
                           </Button>
