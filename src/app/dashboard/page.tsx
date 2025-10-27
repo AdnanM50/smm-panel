@@ -503,15 +503,27 @@ export default function Dashboard() {
                 <div className="marquee-track">
                   {[...Array(2)].map((_, loopIndex) => (
                     <div key={loopIndex} className="marquee-group inline-flex items-center gap-2 pr-4" aria-hidden={loopIndex === 1}>
-                      <Button 
-                        size="sm" 
-                        className="whitespace-nowrap" 
-                        style={{ backgroundColor: selectedPlatform === 'All' ? 'var(--dashboard-blue)' : 'var(--input)', color: selectedPlatform === 'All' ? 'white' : 'var(--dashboard-text-primary)' }}
-                        onClick={() => handlePlatformSelect('All')}
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        All
-                      </Button>
+                      {/* Render the 'All' button only in the first group to avoid duplicate 'All' pills while keeping the marquee duplication for smooth scrolling */}
+                      {loopIndex === 0 && (
+                        <Button 
+                          size="sm" 
+                          className="whitespace-nowrap" 
+                          style={{ backgroundColor: selectedPlatform === 'All' ? 'var(--dashboard-blue)' : 'var(--input)', color: selectedPlatform === 'All' ? 'white' : 'var(--dashboard-text-primary)' }}
+                          onClick={() => handlePlatformSelect('All')}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          All
+                        </Button>
+                      )}
+
+                      {/* If this is the duplicated marquee group, render a skeleton placeholder
+                          in place of the 'All' pill so the scrolling track keeps consistent width
+                          but the 'All' label is not visible twice. */}
+                      {loopIndex === 1 && (
+                        <div key={`skeleton-all-${loopIndex}`} className="h-8 px-3 py-1 rounded-full bg-muted/20 dark:bg-muted/10 animate-pulse" aria-hidden>
+                        </div>
+                      )}
+
                       {dynamicPlatforms.map((name) => {
                         const IconComponent = iconMap[name] || Plus
                         const isSelected = selectedPlatform === name

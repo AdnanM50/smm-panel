@@ -21,14 +21,18 @@ export default function Orders() {
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
 
-  const fetchOrders = async () => {
-    if (!token) return
-    
+  // Fetch orders, try context token first, then fallback to localStorage token so
+  // client navigation to this route loads orders automatically even if the
+  // AuthContext token hasn't been wired up yet when this component mounts.
+  const fetchOrders = async (tokenOverride?: string) => {
+    const tok = tokenOverride || token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null)
+    if (!tok) return
+
     setIsLoading(true)
     setError(null)
-    
+
     try {
-      const ordersData = await getUserOrders(token)
+      const ordersData = await getUserOrders(tok)
       setOrders(ordersData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders')
@@ -37,8 +41,15 @@ export default function Orders() {
     }
   }
 
+  // Try to fetch on mount (covers direct navigation) and also when the context
+  // token changes. Passing no token will let fetchOrders pick up localStorage.
   useEffect(() => {
     fetchOrders()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (token) fetchOrders(token)
   }, [token])
 
   const handleCancelOrder = (order: Order) => {
@@ -110,15 +121,15 @@ export default function Orders() {
         {/* Mobile Layout (sm and below) */}
         <div className="block sm:hidden space-y-4 mb-6">
           <div className="flex items-center gap-2">
-            <Button 
-              onClick={fetchOrders}
+            {/* <Button 
+              onClick={() => fetchOrders()}
               disabled={isLoading}
               className="bg-gradient-primary flex-1"
               size="sm"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
-            </Button>
+            </Button> */}
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -134,14 +145,14 @@ export default function Orders() {
         {/* Tablet Layout (sm to lg) */}
         <div className="hidden sm:block lg:hidden space-y-4 mb-6">
           <div className="flex items-center gap-3">
-            <Button 
-              onClick={fetchOrders}
+            {/* <Button 
+              onClick={() => fetchOrders()}
               disabled={isLoading}
               className="bg-gradient-primary"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
-            </Button>
+            </Button> */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -156,14 +167,14 @@ export default function Orders() {
 
         {/* Desktop Layout (lg and above) */}
         <div className="hidden lg:flex lg:items-center lg:gap-4 mb-6">
-          <Button 
-            onClick={fetchOrders}
+          {/* <Button 
+            onClick={() => fetchOrders()}
             disabled={isLoading}
             className="bg-gradient-primary"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
-          </Button>
+          </Button> */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -211,7 +222,7 @@ export default function Orders() {
         ) : error ? (
           <div className="text-center py-6 sm:py-8 px-4">
             <p className="text-red-500 mb-4 text-sm sm:text-base">{error}</p>
-            <Button onClick={fetchOrders} variant="outline" size="sm" className="sm:size-default">
+            <Button onClick={() => fetchOrders()} variant="outline" size="sm" className="sm:size-default">
               Try Again
             </Button>
           </div>
