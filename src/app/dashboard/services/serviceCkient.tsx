@@ -278,24 +278,6 @@ export default function ServicesClient({ initialServices = [] }: Props) {
             </div>
         </div>
 
-        {/* Quick platform pills - always visible and preserve existing design */}
-        {/* <div className="flex flex-wrap gap-2 mb-4">
-          <button
-            type="button"
-            onClick={() => setActivePlatform("All")}
-            className={`px-3 py-1 rounded-full text-sm ${activePlatform === "All" ? "bg-gradient-primary text-primary-foreground" : "bg-muted/20 text-muted-foreground"}`}>
-            All
-          </button>
-          {allPlatforms.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setActivePlatform(p)}
-              className={`px-3 py-1 rounded-full text-sm ${activePlatform === p ? "bg-gradient-primary text-primary-foreground" : "bg-muted/20 text-muted-foreground"}`}>
-              {p}
-            </button>
-          ))}
-        </div> */}
 
         {(isLoading && !isSearching) && (
           <div>
@@ -361,7 +343,7 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                               <p className="text-sm text-muted-foreground">Type: {service.type || "Default"}</p>
                             </div>
                           </TableCell>
-                          <TableCell className="font-semibold">${service.rate.toFixed(4)}</TableCell>
+                          <TableCell className="font-semibold">{service.userRate != null ? `$${service.userRate.toFixed(4)}` : ''}</TableCell>
                           <TableCell>{service.min} - {service.max}</TableCell>
                           <TableCell>
                             <Button variant="outline" size="sm" onClick={() => openReview(service)}>
@@ -428,7 +410,7 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                             <p className="text-sm text-muted-foreground">Type: {service.type || "Default"}</p>
                           </div>
                         </TableCell>
-                        <TableCell className="font-semibold">${service.rate.toFixed(4)}</TableCell>
+                        <TableCell className="font-semibold">{service.userRate != null ? `$${service.userRate.toFixed(4)}` : ''}</TableCell>
                         <TableCell>{service.min} - {service.max}</TableCell>
                         <TableCell>
                           <Button variant="outline" size="sm" onClick={() => openReview(service)}>
@@ -484,8 +466,12 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                     <div className="text-muted-foreground">Type</div>
                     <div className="font-medium">{selectedService.type || "Default"}</div>
 
-                    <div className="text-muted-foreground">Rate (per 1000)</div>
-                    <div className="font-medium">${selectedService.rate.toFixed(4)}</div>
+                    {selectedService.userRate != null && (
+                      <>
+                        <div className="text-muted-foreground">Rate (per 1000)</div>
+                        <div className="font-medium">${selectedService.userRate.toFixed(4)}</div>
+                      </>
+                    )}
 
                     <div className="text-muted-foreground">Min - Max</div>
                     <div className="font-medium">{selectedService.min} - {selectedService.max}</div>

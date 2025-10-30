@@ -2,12 +2,6 @@
 import React from "react"
 import ServicesClient from "./serviceCkient"
 import { ApiServiceItem, fetchServicesGradually } from "./service-api"
-// import ServicesClient from "@/components/services/ServicesClient"
-// import { fetchServicesGradually } from "@/components/services/service-api"
-// import type { ApiServiceItem } from "@/components/services/service-api"
-
-// If you want to use a user token from cookies for SSR, read cookies here (example commented below).
-
 export default async function ServicesPage(): Promise<React.ReactElement> {
   let initialServices: ApiServiceItem[] = []
 
@@ -25,14 +19,3 @@ export default async function ServicesPage(): Promise<React.ReactElement> {
 
   return <ServicesClient initialServices={initialServices} />
 }
-
-/*
-Optional: to use a token from cookies during SSR (Next.js 13+), you could do:
-
-import { cookies } from "next/headers"
-
-const cookieStore = cookies()
-const token = cookieStore.get("token")?.value
-
-then pass token to fetchServicesGradually above.
-*/

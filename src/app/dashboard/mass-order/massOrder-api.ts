@@ -41,11 +41,11 @@ export async function submitMassOrder(
       serviceRateMap.set(service.service, service.userRate || service.rate)
     })
 
-    // Calculate total profit
+    // Calculate total profit (rates are per 1000 units)
     for (const order of orders) {
       const userRate = serviceRateMap.get(order.serviceId)
       if (userRate) {
-        totalProfit += userRate * order.quantity
+        totalProfit += (userRate / 1000) * order.quantity
       }
     }
 
@@ -134,12 +134,12 @@ export async function calculateTotalProfit(
       serviceRateMap.set(service.service, service.userRate || service.rate)
     })
 
-    // Calculate total profit
+    // Calculate total profit (rates are per 1000 units)
     let totalProfit = 0
     for (const order of orders) {
       const userRate = serviceRateMap.get(order.serviceId)
       if (userRate) {
-        totalProfit += userRate * order.quantity
+        totalProfit += (userRate / 1000) * order.quantity
       }
     }
 
