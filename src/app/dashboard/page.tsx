@@ -47,8 +47,12 @@ function useDebounced<T>(value: T, delay = 400) {
 }
 
 export default function Dashboard() {
-  const { token, user } = useAuth()
-  const { balance, totalSpent, isLoading: dashboardLoading } = useDashboardData()
+const { token, user } = useAuth()
+const {  loading: dashboardLoading } = useDashboardData()
+
+const balance = user?.balance ?? 0
+const totalSpent = user?.totalSpent ?? 0
+
 
   // UI state
   const [searchQuery, setSearchQuery] = useState("")

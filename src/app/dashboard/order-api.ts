@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://smm-panel-khan-it.onrender.com/api'
+const DEFAULT_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://smm-panel-khan-it.up.railway.app/api'
 
 export interface PlaceOrderRequest {
 	serviceId: number

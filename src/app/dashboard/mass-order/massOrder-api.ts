@@ -17,7 +17,7 @@ export interface MassOrderResponse {
   data?: any
 }
 
-const API_BASE_URL = 'https://smm-panel-khan-it.onrender.com/api'
+const API_BASE_URL = 'https://smm-panel-khan-it.up.railway.app/api'
 
 export async function submitMassOrder(
   orders: MassOrderItem[],

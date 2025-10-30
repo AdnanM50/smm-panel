@@ -79,7 +79,7 @@ export default function AddFunds() {
     setIsHistoryLoading(true);
     setHistoryError(null);
     try {
-      const res = await fetch('https://smm-panel-khan-it.onrender.com/api/viewTransactionHistory', {
+      const res = await fetch('https://smm-panel-khan-it.up.railway.app/api/viewTransactionHistory', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

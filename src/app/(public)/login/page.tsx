@@ -44,8 +44,6 @@ export default function LoginPage() {
         toast.success(result.message || 'Login successful!')
         // Navigate and immediately refresh so dashboard/services mount with fresh auth state
         router.replace('/dashboard')
-        // Force a client-side refresh to ensure any caches/effects tied to auth run immediately
-        // This prevents the need for a manual page reload after login
         setTimeout(() => router.refresh(), 0)
       } else {
         toast.error(result.message || 'Login failed. Please try again.')
