@@ -17,8 +17,8 @@ import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
-  const { isLoading, isAuthenticated } = useAuth()
+  // Call the auth hook once and destructure what we need to avoid extra re-renders
+  const { login, isLoading, isAuthenticated } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -42,10 +42,11 @@ export default function LoginPage() {
       
       if (result.success) {
         toast.success(result.message || 'Login successful!')
-        // Small delay to show the toast before redirecting
-        setTimeout(() => {
-          router.push("/dashboard")
-        }, 1000)
+        // Navigate and immediately refresh so dashboard/services mount with fresh auth state
+        router.replace('/dashboard')
+        // Force a client-side refresh to ensure any caches/effects tied to auth run immediately
+        // This prevents the need for a manual page reload after login
+        setTimeout(() => router.refresh(), 0)
       } else {
         toast.error(result.message || 'Login failed. Please try again.')
       }
