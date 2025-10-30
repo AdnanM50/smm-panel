@@ -15,10 +15,7 @@ interface DashboardData {
 }
 
 export function useDashboardData(): DashboardData {
-  // Only require a token to fetch services — some app flows set the token
-  // before the full user profile is populated. Waiting for `isAuthenticated`
-  // can delay or prevent the services fetch. Fetch as soon as a token is
-  // available.
+
   const { token } = useAuth();
   const [services, setServices] = useState<ApiServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
