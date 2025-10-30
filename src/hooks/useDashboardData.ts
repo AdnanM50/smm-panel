@@ -34,7 +34,7 @@ export function useDashboardData(): DashboardData {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await fetchServicesFromApi({ token }); // ✅ correct argument
+        const data = await fetchServicesFromApi({ token });
         setServices(data); // ✅ now type matches perfectly
       } catch (err) {
         console.error("Dashboard data fetch failed:", err);

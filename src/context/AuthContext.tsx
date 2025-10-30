@@ -98,30 +98,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setToken(storedToken);
-
-        const { response, data } = await cachedApiCall("/profileDetails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            token: storedToken,
-          },
-        });
-
-        if (response.ok && data.status === "Success" && data.data?.length > 0) {
-          const p = data.data[0];
-          setUser({
-            _id: p._id,
-            id: p._id,
-            email: p.email,
-            username: p.username,
-            name: p.name,
-            balance: p.balance,
-            totalSpent: p.totalSpent,
-            role: p.role,
-            createdAt: p.createdAt,
-            updatedAt: p.updatedAt,
+        // Attempt to fetch and populate profile details using helper below
+        try {
+          const { response, data } = await cachedApiCall("/profileDetails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              token: storedToken,
+            },
           });
-        } else {
+
+          if (response.ok && data.status === "Success" && data.data?.length > 0) {
+            const p = data.data[0];
+            setUser({
+              _id: p._id,
+              id: p._id,
+              email: p.email,
+              username: p.username,
+              name: p.name,
+              balance: p.balance,
+              totalSpent: p.totalSpent,
+              role: p.role,
+              createdAt: p.createdAt,
+              updatedAt: p.updatedAt,
+            });
+          } else {
+            localStorage.removeItem("auth_token");
+            setToken(null);
+            setUser(null);
+          }
+        } catch (err) {
+          console.error('Auth init profile fetch failed', err)
           localStorage.removeItem("auth_token");
           setToken(null);
           setUser(null);
@@ -172,6 +179,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // debug
   try { console.debug('[Auth] login: token set', authToken?.slice?.(0,10) + '...') } catch {}
         setUser(userData);
+        
+        // If login response didn't include full profile data, attempt to fetch it
+        // from the profileDetails endpoint so the rest of the app (dashboard)
+        // receives up-to-date user info immediately.
+        (async () => {
+          try {
+            const { response: pRes, data: pData } = await cachedApiCall('/profileDetails', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', token: authToken },
+            }, `/profileDetails-${authToken}`);
+
+            if (pRes.ok && pData?.status === 'Success' && pData.data?.length > 0) {
+              const p = pData.data[0];
+              setUser(prev => ({
+                _id: p._id,
+                id: p._id,
+                email: p.email,
+                username: p.username,
+                name: p.name,
+                balance: p.balance,
+                totalSpent: p.totalSpent,
+                role: p.role,
+                createdAt: p.createdAt,
+                updatedAt: p.updatedAt,
+              }));
+              console.debug('[Auth] fetched profile after login')
+            }
+          } catch (err) {
+            console.warn('[Auth] fetchProfileDetails after login failed', err)
+          }
+        })();
 
         // Return status to match API-style responses so callers that check
         // `result?.status === 'Success'` keep working.
@@ -193,8 +231,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
   };
 
+  // Exposed helper to fetch profile details on demand
+  const fetchProfileDetails = async (): Promise<{ success: boolean; message: string }> => {
+    if (!token) return { success: false, message: 'No token' }
+    try {
+      const { response, data } = await cachedApiCall('/profileDetails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', token },
+      }, `/profileDetails-${token}`);
+      if (response.ok && data?.status === 'Success' && data.data?.length > 0) {
+        const p = data.data[0];
+        setUser({
+          _id: p._id,
+          id: p._id,
+          email: p.email,
+          username: p.username,
+          name: p.name,
+          balance: p.balance,
+          totalSpent: p.totalSpent,
+          role: p.role,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+        });
+        return { success: true, message: 'Profile fetched' }
+      }
+      return { success: false, message: data?.message || 'No profile data' }
+    } catch (err) {
+      console.error('fetchProfileDetails error', err)
+      return { success: false, message: String(err) }
+    }
+  }
+
+  // Validate token by attempting a lightweight profile request.
+  // Returns true when the token appears valid and profileDetails returns success.
+  const validateToken = async (): Promise<boolean> => {
+    if (!token) return false
+    try {
+      const { response, data } = await cachedApiCall('/profileDetails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', token },
+      }, `/validate-${token}`)
+      return Boolean(response?.ok && data?.status === 'Success')
+    } catch (err) {
+      console.warn('validateToken failed', err)
+      return false
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, logout } as any}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, logout, fetchProfileDetails, validateToken } as any}>
       {children}
     </AuthContext.Provider>
   );
