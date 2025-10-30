@@ -2,17 +2,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CreateOrderCard from "@/components/dashboard/CreateOrderCard"
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Wallet,
   TrendingUp,
   ArrowRight,
-  Search,
-  Plus,
-  FileStack,
   MessageSquare,
   Music2,
   Linkedin,
@@ -23,9 +17,7 @@ import {
   Send,
   CheckCircle,
   Percent,
-  User,
-  Info,
-  AlertCircle,
+  User
 } from "lucide-react";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -36,7 +28,6 @@ import { toast } from "sonner";
 import { submitMassOrder, parseMassOrderInput, calculateTotalProfit, type MassOrderItem } from "./mass-order/massOrder-api";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-// Lightweight debounce hook
 function useDebounced<T>(value: T, delay = 400) {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -54,7 +45,6 @@ const balance = user?.balance ?? 0
 const totalSpent = user?.totalSpent ?? 0
 
 
-  // UI state
   const [searchQuery, setSearchQuery] = useState("")
   const [services, setServices] = useState<ApiServiceItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -76,7 +66,7 @@ const totalSpent = user?.totalSpent ?? 0
   const [moErrors, setMoErrors] = useState<string[]>([])
 
   const debouncedQuery = useDebounced(searchQuery, 350)
-  const servicesCache = useRef<Record<string, ApiServiceItem[]>>({}) // cache by "platform|query"
+  const servicesCache = useRef<Record<string, ApiServiceItem[]>>({}) 
   const abortRef = useRef<AbortController | null>(null)
 
   // Dynamic platforms

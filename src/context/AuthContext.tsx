@@ -28,7 +28,12 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  login: (email: string, password: string) => Promise<{
+    status?: string;
+    success: boolean;
+    message: string;
+    token?: string;
+}>;
   signup: (email: string, username: string, name: string, password: string) => Promise<{ success: boolean; message: string }>;
   fetchProfileDetails: () => Promise<{ success: boolean; message: string }>;
   updateProfile: (profileData: UpdateProfileData) => Promise<{ success: boolean; message: string }>;
@@ -135,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // --- LOGIN FIXED ---
-  const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
+  const login = async (email: string, password: string): Promise<{ status?: string; success: boolean; message: string; token?: string }> => {
     try {
       setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/login`, {
@@ -164,16 +169,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // ✅ Save token immediately
         localStorage.setItem("auth_token", authToken);
         setToken(authToken);
+  // debug
+  try { console.debug('[Auth] login: token set', authToken?.slice?.(0,10) + '...') } catch {}
         setUser(userData);
 
-        // Wait for state to apply before returning success
-        return { success: true, message: "Login successful" };
+        // Return status to match API-style responses so callers that check
+        // `result?.status === 'Success'` keep working.
+        return { status: 'Success', success: true, message: "Login successful", token: authToken };
       }
 
-      return { success: false, message: data.message || "Invalid credentials" };
+      return { status: data?.status || 'Error', success: false, message: data?.message || "Invalid credentials" };
     } catch (err) {
       console.error("Login error:", err);
-      return { success: false, message: "Network error" };
+      return { status: 'Error', success: false, message: "Network error" };
     } finally {
       setIsLoading(false);
     }

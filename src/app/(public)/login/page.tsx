@@ -39,14 +39,18 @@ export default function LoginPage() {
     
     try {
       const result = await login(formData.email, formData.password)
-      
-      if (result.success) {
-        toast.success(result.message || 'Login successful!')
-        // Navigate and immediately refresh so dashboard/services mount with fresh auth state
-        router.replace('/dashboard')
-        setTimeout(() => router.refresh(), 0)
+
+      if (result?.success || result?.status === 'Success') {
+        toast.success(result?.message || 'Login successful!')
+        // Use push and await to ensure navigation completes before refreshing.
+         router.push('/dashboard')
+        // try {
+        //   router.refresh()
+        // } catch (e) {
+        //   // refresh may not be available in some environments; ignore safely
+        // }
       } else {
-        toast.error(result.message || 'Login failed. Please try again.')
+        toast.error(result?.message || 'Login failed. Please try again.')
       }
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again.')

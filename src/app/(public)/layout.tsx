@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../../app/globals.css";
-import { AuthProvider } from "@/context/AuthContext";
 
 const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist' });
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
@@ -20,14 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       
-      <body
-      suppressHydrationWarning 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AuthProvider>
-          {/* <Navbar /> */}
+      <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* <Navbar /> */}
         {children}
-        </AuthProvider>
       </body>
     </html>
   );
