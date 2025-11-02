@@ -117,7 +117,7 @@ export default function MassOrder() {
   }
 
   return (
-    <div className="mass-order space-y-8 max-w-6xl">
+    <div className="mass-order space-y-8 max-w-6xl px-0 sm:px-6 lg:px-8 mx-auto">
       {/* Enhanced Header Section */}
       <div className="text-center space-y-4">
         <div className="mo-hero">
@@ -136,12 +136,12 @@ export default function MassOrder() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
         
-        <div className="relative z-10 flex items-start gap-4 text-white">
-          <div className="mo-card-icon p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+      <div className="relative z-10 flex flex-col md:flex-row items-start gap-4 text-white">
+        <div className="mo-card-icon p-3 md:p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
             <Layers className="h-8 w-8" />
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold mb-3 flex items-center gap-2">
+            <h2 className="text-xl md:text-2xl font-bold mb-3 flex items-center gap-2">
               <Zap className="h-6 w-6 text-yellow-300" />
               Bulk Order Processing
             </h2>
@@ -162,8 +162,8 @@ export default function MassOrder() {
         </div>
       </Card>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 p-8 bg-gradient-card border-border glow-on-hover">
+      <div className="grid gap-8 grid-cols-1 md:grid-cols-3">
+        <Card className="md:col-span-2 p-6 md:p-8 bg-gradient-card border-border glow-on-hover">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-xl bg-gradient-info">
               <Layers className="h-6 w-6 text-white" />
@@ -186,7 +186,7 @@ export default function MassOrder() {
                 placeholder="service_id | link | quantity&#10;4084 | https://web.telegram.org/a/#8092633438 | 10&#10;2199 | https://example.com | 5"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="min-h-[300px] bg-background border-border font-mono text-sm hover:border-primary/50 transition-colors"
+                className="min-h-[180px] md:min-h-[260px] lg:min-h-[300px] bg-background border-border font-mono text-sm hover:border-primary/50 transition-colors"
               />
             </div>
 
@@ -207,8 +207,8 @@ export default function MassOrder() {
               </div>
             )}
 
-            <div className="p-6 rounded-xl bg-gradient-warning/10 border border-warning/20">
-              <div className="flex items-start gap-3">
+            <div className="sm:p-6 p-1 rounded-xl bg-gradient-warning/10 border border-warning/20">
+              <div className="flex  items-start gap-3">
                 <div className="p-2 rounded-lg bg-warning/20">
                   <Info className="h-5 w-5 text-warning" />
                 </div>
@@ -227,16 +227,16 @@ export default function MassOrder() {
             <Button 
               onClick={handleSubmit}
               disabled={isSubmitting || orders.length === 0 || errors.length > 0}
-              className="w-full bg-gradient-primary text-xl py-6 glow-on-hover"
+              className="w-full bg-gradient-primary text-lg md:text-xl py-3 md:py-6 glow-on-hover"
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-white mr-3"></div>
                   Submitting...
                 </>
               ) : (
                 <>
-                  <Zap className="mr-3 h-6 w-6" />
+                  <Zap className="mr-3 h-5 w-5 md:h-6 md:w-6" />
                   Submit Mass Order ({orders.length} orders)
                 </>
               )}

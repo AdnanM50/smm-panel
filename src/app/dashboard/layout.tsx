@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { SidebarContent } from "./_components/sidebar-content"
 import { Header } from "./_components/header"
 import { ThemeProvider } from "@/context/theme-provider"
+import { useAuth } from "@/context/AuthContext"
+import { useRouter } from "next/navigation"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -26,6 +28,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isMobile = deviceType === "mobile"
   const isTablet = deviceType === "tablet"
   const isDesktop = deviceType === "desktop"
+
+  // Protect the dashboard: redirect to / when auth is not ready or user is not allowed
+  const { user, isLoading, isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+
+    if (isLoading) return
+
+    if (!isAuthenticated || user?.role !== 'user') {
+      router.push('/')
+    }
+  }, [isLoading, isAuthenticated, user, router])
 
   return (
     <ThemeProvider>
@@ -62,8 +77,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 mx-auto transition-all duration-300
                 ${isMobile ? "p-3" : isTablet ? "p-5 max-w-5xl" : "p-6 max-w-7xl"}
               `}
-            >
-              {children}
+              >
+              {/* While auth is initializing, avoid rendering dashboard content */}
+              {isLoading ? null : children}
             </div>
           </main>
         </div>

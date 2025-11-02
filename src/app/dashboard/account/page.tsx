@@ -89,14 +89,7 @@ export default function Account() {
                   </Button>
                 </div>
 
-                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-                  <Button 
-                    onClick={handleLogout}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white text-lg py-6"
-                  >
-                    Logout
-                  </Button>
-                </div>
+               
 
                 <div className="space-y-4">
                   <div>
@@ -152,7 +145,7 @@ export default function Account() {
               </div>
             </Card>
 
-            <Card className="p-8 bg-gradient-card border-border  glow-on-hover">
+            <Card className="p-8 bg-gradient-card border-border h-fit glow-on-hover">
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 rounded-xl bg-gradient-danger">
                   <Shield className="h-6 w-6 text-white" />

@@ -411,16 +411,67 @@ const totalSpent = user?.totalSpent ?? 0
         {/* Right sidebar (responsive fixes) */}
         <div className="space-y-4 w-full max-w-full">
           <Card className="w-full max-w-full border-none rounded-2xl bg-gradient-to-b from-white to-blue-50/40 shadow-sm ring-1 ring-blue-100/70 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0">
-            <CardContent className="p-4 sm:p-6">
-              <div className="space-y-4">
-                <Button variant="ghost" className="w-full h-auto py-3 px-4 justify-between rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 shadow-xs transition-colors dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/20"><span className="inline-flex items-center gap-2">Statistics</span><ArrowRight className="h-4 w-4 text-blue-400 dark:text-white/70" /></Button>
-                <Button variant="ghost" className="w-full h-auto py-3 px-4 justify-between rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 shadow-xs transition-colors dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/20"><span className="inline-flex items-center gap-2">Read Before Ordering</span><ArrowRight className="h-4 w-4 text-blue-400 dark:text-white/70" /></Button>
-                <div className="border-t border-blue-100 dark:border-white/20 pt-4"><div className="grid grid-cols-2 gap-3"><div className="p-3 rounded-xl flex items-center gap-3 bg-blue-50 ring-1 ring-blue-100 hover:shadow-sm transition-transform hover:-translate-y-0.5 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0"><div className="h-8 w-8 rounded-full bg-white flex items-center justify-center ring-1 ring-blue-200 dark:bg-white/10 dark:ring-white/10"><User className="h-4 w-4 text-blue-700 dark:text-white" /></div><div><p className="text-xs text-blue-700/70 dark:text-white/70">Username</p><p className="text-sm font-semibold text-blue-900 dark:text-white">{user?.username || user?.email || 'User'}</p></div></div><div className="p-3 rounded-xl flex items-center gap-3 bg-blue-50 ring-1 ring-blue-100 hover:shadow-sm transition-transform hover:-translate-y-0.5 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0"><div className="h-8 w-8 rounded-full bg-white flex items-center justify-center ring-1 ring-blue-200 dark:bg-white/10 dark:ring-white/10"><Percent className="h-4 w-4 text-blue-700 dark:text-white" /></div><div><p className="text-xs text-blue-700/70 dark:text-white/70">Discount Rate</p><p className="text-sm font-semibold text-blue-900 dark:text-white">0%</p></div></div></div></div>
-              </div>
-            </CardContent>
-          </Card>
+<CardContent className="p-4 sm:p-6">
+<div className="space-y-4">
+{/* Buttons: stack on small, inline on md+ */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-3">
+<Button
+variant="ghost"
+className="flex-1 min-w-0 h-auto py-3 px-4 justify-between rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 shadow-xs transition-colors dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/20"
+>
+<span className="inline-flex items-center gap-2 truncate">
+<span className="text-sm sm:text-base">Statistics</span>
+</span>
+<ArrowRight className="h-4 w-4 text-blue-400 dark:text-white/70 ml-2" />
+</Button>
 
-      <div className="flex xl:flex-row flex-col">
+
+<Button
+variant="ghost"
+className="flex-1 min-w-0 h-auto py-3 px-4 justify-between rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 shadow-xs transition-colors dark:bg-white/20 dark:hover:bg-white/30 dark:text-white dark:border-white/20"
+>
+<span className="inline-flex items-center gap-2 truncate">
+<span className="text-sm sm:text-base">Read Before Ordering</span>
+</span>
+<ArrowRight className="h-4 w-4 text-blue-400 dark:text-white/70 ml-2" />
+</Button>
+</div>
+
+
+<div className="border-t border-blue-100 dark:border-white/20 pt-4">
+{/* Responsive grid: 1 column on xs, 2 columns on sm+ */}
+<div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+
+
+<div className="p-3 rounded-xl flex items-center gap-3 bg-blue-50 ring-1 ring-blue-100 hover:shadow-sm transform transition-transform hover:-translate-y-0.5 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0">
+<div className="h-10 w-10 sm:h-8 sm:w-8 rounded-full bg-white flex items-center justify-center ring-1 ring-blue-200 dark:bg-white/10 dark:ring-white/10">
+<User className="h-5 w-5 text-blue-700 dark:text-white" />
+</div>
+<div className="min-w-0">
+<p className="text-xs sm:text-sm text-blue-700/70 dark:text-white/70">Username</p>
+<p className="text-sm sm:text-base font-semibold text-blue-900 dark:text-white truncate">{user?.username || user?.email || 'User'}</p>
+</div>
+</div>
+
+
+<div className="p-3 rounded-xl flex items-center gap-3 bg-blue-50 ring-1 ring-blue-100 hover:shadow-sm transform transition-transform hover:-translate-y-0.5 dark:bg-[linear-gradient(to_bottom,var(--dashboard-blue-dark),var(--dashboard-blue-darker))] dark:ring-0">
+<div className="h-10 w-10 sm:h-8 sm:w-8 rounded-full bg-white flex items-center justify-center ring-1 ring-blue-200 dark:bg-white/10 dark:ring-white/10">
+<Percent className="h-5 w-5 text-blue-700 dark:text-white" />
+</div>
+<div>
+<p className="text-xs sm:text-sm text-blue-700/70 dark:text-white/70">Discount Rate</p>
+<p className="text-sm sm:text-base font-semibold text-blue-900 dark:text-white">0%</p>
+</div>
+</div>
+
+
+</div>
+</div>
+</div>
+</CardContent>
+</Card>
+
+      <div className="flex xl:flex-col gap-4 flex-col">
             <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}><CardContent className="p-6 text-center"><div className="flex items-center justify-center mb-2"><CheckCircle className="h-8 w-8" style={{ color: 'var(--dashboard-green)' }} /></div><div className="text-3xl font-bold" style={{ color: 'var(--dashboard-green)' }}>52</div><div className="text-sm" style={{ color: 'var(--dashboard-text-secondary)' }}>Active Orders</div></CardContent></Card>
 
           <Card style={{ backgroundColor: 'var(--dashboard-bg-card)' }}><CardContent className="p-6 text-center"><div className="flex items-center justify-center mb-2"><MessageSquare className="h-8 w-8" style={{ color: 'var(--dashboard-blue)' }} /></div><div className="text-3xl font-bold" style={{ color: 'var(--dashboard-blue)' }}>1</div><div className="text-sm" style={{ color: 'var(--dashboard-text-secondary)' }}>Unread Tickets</div></CardContent></Card>

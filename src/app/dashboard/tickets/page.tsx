@@ -96,15 +96,15 @@ export default function Tickets() {
   }, [token])
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-2 sm:p-6 max-w-7xl mx-auto">
       {/* Header Card */}
-      <Card className="p-8 bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
-        <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-            <Headphones className="w-8 h-8 text-primary" />
+      <Card className="p-6 sm:p-8 bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+            <Headphones className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold mb-2">Tickets</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Tickets</h1>
             <p className="text-muted-foreground">
               Be sure to check out the{" "}
               <a href="#" className="text-primary hover:underline">
@@ -116,7 +116,7 @@ export default function Tickets() {
         </div>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Create Support Request */}
         <Card className="p-6 h-fit">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -132,12 +132,12 @@ export default function Tickets() {
           <div className="space-y-4">
             <div className="flex flex-col gap-1">
               <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ticket subject" className="dark:bg-input/60 dark:border-gray-700" />
+              <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ticket subject" className="w-full dark:bg-input/60 dark:border-gray-700" />
             </div>
 
             <div className="flex flex-col gap-1">
               <Label htmlFor="orderId">Order ID (apiOrderId)</Label>
-              <Input id="orderId" value={orderApiId} onChange={(e) => setOrderApiId(e.target.value)} placeholder="Enter API Order ID (e.g. 7399585)" className="dark:bg-input/60 dark:border-gray-700" />
+              <Input id="orderId" value={orderApiId} onChange={(e) => setOrderApiId(e.target.value)} placeholder="Enter API Order ID (e.g. 7399585)" className="w-full dark:bg-input/60 dark:border-gray-700" />
             </div>
 
             <div className="flex flex-col gap-1">
@@ -146,7 +146,7 @@ export default function Tickets() {
                 id="message"
                 rows={6}
                 placeholder="Describe your issue..."
-                className="resize-none dark:bg-input/60 dark:border-gray-700"
+                className="w-full resize-none dark:bg-input/60 dark:border-gray-700"
               />
             </div>
 
@@ -197,7 +197,7 @@ export default function Tickets() {
         </Card>
 
         {/* My Support Requests */}
-        <Card className="p-6 h-fit">
+        <Card className="p-2 sm:p-6 h-fit overflow-hidden">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Headphones className="w-5 h-5 text-primary" />
             My support requests
@@ -219,22 +219,22 @@ export default function Tickets() {
               return (
                 <div
                   key={ticket._id ?? ticket.id}
-                  className="p-4 rounded-lg border bg-card hover:border-primary/40 transition-all cursor-pointer group"
+                  className="p-4 rounded-lg border bg-card hover:border-primary/40 transition-all cursor-pointer group overflow-hidden"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-start sm:items-center gap-3 w-full sm:w-auto min-w-0">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
                         S
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium group-hover:text-primary transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium group-hover:text-primary transition-colors break-words sm:truncate">
                           {ticket.subject ?? ticket.title}
                         </p>
                         {/* Status badge */}
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>{(ticket.status || 'open')}</span>
+                        <span className={`inline-block mt-2 sm:mt-1 px-2 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>{(ticket.status || 'open')}</span>
                       </div>
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    <span className="text-xs text-muted-foreground mt-2 sm:mt-0 sm:ml-4 sm:whitespace-nowrap">
                       {ticket.createdAt ?? ticket.date}
                     </span>
                   </div>
@@ -243,7 +243,6 @@ export default function Tickets() {
             })}
           </div>
 
-      
         </Card>
       </div>
     </div>
