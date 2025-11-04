@@ -225,6 +225,103 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // --- SIGNUP (new) ---
+  const signup = async (email: string, username: string, name: string, password: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      setIsLoading(true);
+
+  // Try common registration endpoints (try `/registration` first because the
+  // backend uses that path, then fall back to other common names)
+  const tryEndpoints = ["/registration"];
+      let response: Response | null = null;
+      let data: any = null;
+
+      for (const ep of tryEndpoints) {
+        try {
+          response = await fetch(`${API_BASE_URL}${ep}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, username, name, password }),
+          });
+          data = await response.json();
+          // if response is not 404, stop trying further endpoints
+          if (response.status !== 404) break;
+        } catch (err) {
+          // network error for this endpoint, try next
+          console.warn('[Auth] signup attempt failed for', ep, err);
+          response = null;
+          data = null;
+        }
+      }
+
+      if (!response) return { success: false, message: 'Network error' };
+
+      // If backend returns success and token, store it and populate user similar to login
+      if (response.ok && (data?.status === 'Success' || data?.success)) {
+        const authToken = data.token || data?.data?.token || null;
+
+        if (authToken) {
+          try { localStorage.setItem('auth_token', authToken); } catch {}
+          setToken(authToken);
+        }
+
+        // If API returns user profile include it, otherwise attempt to fetch profile
+        if (data?.user) {
+          const p = data.user;
+          setUser({
+            _id: p._id || p.id,
+            id: p._id || p.id,
+            email: p.email,
+            username: p.username || username,
+            name: p.name || name,
+            balance: p.balance || 0,
+            totalSpent: p.totalSpent || 0,
+            role: p.role || 'user',
+            createdAt: p.createdAt || '',
+            updatedAt: p.updatedAt || '',
+          });
+        } else if (authToken) {
+          // fire-and-forget fetch profile to populate user state
+          (async () => {
+            try {
+              const { response: pRes, data: pData } = await cachedApiCall('/profileDetails', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', token: authToken },
+              }, `/profileDetails-${authToken}`);
+
+              if (pRes.ok && pData?.status === 'Success' && pData.data?.length > 0) {
+                const p = pData.data[0];
+                setUser({
+                  _id: p._id,
+                  id: p._id,
+                  email: p.email,
+                  username: p.username,
+                  name: p.name,
+                  balance: p.balance,
+                  totalSpent: p.totalSpent,
+                  role: p.role,
+                  createdAt: p.createdAt,
+                  updatedAt: p.updatedAt,
+                });
+              }
+            } catch (err) {
+              console.warn('[Auth] fetchProfileDetails after signup failed', err)
+            }
+          })();
+        }
+
+        return { success: true, message: data?.message || data?.msg || 'Registration successful' };
+      }
+
+      return { success: false, message: data?.message || data?.msg || 'Registration failed' };
+    } catch (err) {
+      console.error('Signup error', err);
+      return { success: false, message: 'Network error' };
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem("auth_token");
     setUser(null);
@@ -279,7 +376,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, logout, fetchProfileDetails, validateToken } as any}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, signup, logout, fetchProfileDetails, validateToken } as any}>
       {children}
     </AuthContext.Provider>
   );
