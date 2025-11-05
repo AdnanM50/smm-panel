@@ -95,6 +95,7 @@ export function OTPModal({ isOpen, onClose, email }: OTPModalProps) {
   }
 
   const handleClose = () => {
+    // explicit close by user: reset the modal internal state and notify parent
     setStep('otp')
     setOtp("")
     setNewPassword("")
@@ -102,8 +103,22 @@ export function OTPModal({ isOpen, onClose, email }: OTPModalProps) {
     onClose()
   }
 
+  const handleOpenChange = (open: boolean) => {
+    // If the dialog is trying to close (click outside / Esc), only allow
+    // closing when the flow is finished (step === 'success'). This prevents
+    // accidental dismissal while the user is entering OTP/new password.
+    if (!open) {
+      if (step === 'success') {
+        handleClose()
+      } else {
+        // ignore attempts to close by outside click; keep modal open
+        return
+      }
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-slate-900 border-slate-800">
         <DialogHeader>
           <DialogTitle className="text-white text-center">
@@ -112,6 +127,16 @@ export function OTPModal({ isOpen, onClose, email }: OTPModalProps) {
             {step === 'success' && 'Password Reset Successful'}
           </DialogTitle>
         </DialogHeader>
+
+        {/* explicit close button - allow user to intentionally close the modal */}
+        <button
+          aria-label="Close"
+          onClick={handleClose}
+          className="absolute right-3 top-3 text-slate-400 hover:text-white"
+          type="button"
+        >
+          <X className="w-4 h-4" />
+        </button>
 
         {step === 'otp' && (
           <Card className="bg-slate-800/50 border-slate-700 p-6">

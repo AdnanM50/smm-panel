@@ -322,6 +322,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // --- FORGOT PASSWORD / OTP helpers ---
+  const verifyEmail = async (email: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const url = `${API_BASE_URL}/verifyEmail/${encodeURIComponent(email)}`;
+      const response = await fetch(url, { method: 'GET' });
+      const data = await response.json();
+      if (response.ok && (data?.status === 'Success' || data?.success)) {
+        return { success: true, message: data?.message || 'Verification code sent' };
+      }
+      return { success: false, message: data?.message || 'Email verification failed' };
+    } catch (err) {
+      console.error('verifyEmail error', err);
+      return { success: false, message: 'Network error' };
+    }
+  }
+
+  const verifyOTP = async (email: string, otp: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const url = `${API_BASE_URL}/verifyOTP/${encodeURIComponent(email)}/${encodeURIComponent(otp)}`;
+      const response = await fetch(url, { method: 'GET' });
+      const data = await response.json();
+      if (response.ok && (data?.status === 'Success' || data?.success)) {
+        return { success: true, message: data?.message || 'OTP verified' };
+      }
+      return { success: false, message: data?.message || 'OTP verification failed' };
+    } catch (err) {
+      console.error('verifyOTP error', err);
+      return { success: false, message: 'Network error' };
+    }
+  }
+
+  const resetPassword = async (email: string, otp: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const url = `${API_BASE_URL}/passwordReset/${encodeURIComponent(email)}/${encodeURIComponent(otp)}/${encodeURIComponent(newPassword)}`;
+      const response = await fetch(url, { method: 'GET' });
+      const data = await response.json();
+      if (response.ok && (data?.status === 'Success' || data?.success)) {
+        return { success: true, message: data?.message || 'Password reset successful' };
+      }
+      return { success: false, message: data?.message || 'Password reset failed' };
+    } catch (err) {
+      console.error('resetPassword error', err);
+      return { success: false, message: 'Network error' };
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem("auth_token");
     setUser(null);
@@ -376,7 +422,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, signup, logout, fetchProfileDetails, validateToken } as any}>
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, login, signup, verifyEmail, verifyOTP, resetPassword, logout, fetchProfileDetails, validateToken } as any}>
       {children}
     </AuthContext.Provider>
   );
