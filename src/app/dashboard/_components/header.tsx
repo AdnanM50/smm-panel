@@ -8,12 +8,16 @@ import { Badge } from "@/components/ui/badge"
 
 interface HeaderProps {
   onMenuClick?: () => void
+  className?: string
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, className }: HeaderProps) {
   return (
     <header
-      className="sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6 h-14 sm:h-16 border-b backdrop-blur-md"
+      className={
+        "sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6 h-14 sm:h-16 border-b backdrop-blur-md " +
+        (className ?? "")
+      }
       style={{
         borderBottom: "1px solid var(--border)",
         backgroundColor: "var(--background)",
