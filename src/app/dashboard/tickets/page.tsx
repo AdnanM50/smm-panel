@@ -5,83 +5,70 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Headphones, Paperclip } from "lucide-react";
 import { useAuth } from '@/context/AuthContext'
 import { createTicket } from './tickit-api'
 import { getMyTickets, Ticket as ApiTicket } from './tickit-api'
 import { useEffect } from 'react'
 
-const tickets = [
-  {
-    id: "22792",
-    title: "Other",
-    status: "Pending",
-    statusColor: "text-warning",
-    date: "2025-08-21 12:48:46",
-  },
-  {
-    id: "19489",
-    title: "Orders - Cancel",
-    status: "Closed",
-    statusColor: "text-destructive",
-    date: "2025-07-09 16:26:15",
-  },
-  {
-    id: "19490",
-    title: "Orders - Cancel",
-    status: "Answered",
-    statusColor: "text-success",
-    date: "2025-07-09 13:03:19",
-  },
-  {
-    id: "14917",
-    title: "Orders - Refill",
-    status: "Answered",
-    statusColor: "text-success",
-    date: "2025-05-01 00:00:17",
-  },
-  {
-    id: "14918",
-    title: "Orders - Refill",
-    status: "Answered",
-    statusColor: "text-success",
-    date: "2025-04-30 23:09:22",
-  },
-];
 
 export default function Tickets() {
   const [subject, setSubject] = useState('')
   const [orderApiId, setOrderApiId] = useState('')
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
-  const [apiTickets, setApiTickets] = useState<ApiTicket[] | null>(null)
+  type DisplayTicket = {
+    id: string
+    subject: string
+    status: string
+    createdAt?: string
+    raw?: any
+  }
+
+  const [apiTickets, setApiTickets] = useState<DisplayTicket[] | null>(null)
   const [rawResponse, setRawResponse] = useState<any | null>(null)
 
   const { token } = useAuth()
-
   useEffect(() => {
     let mounted = true
-    async function load() {
+
+    async function loadTickets() {
       if (!token) return
       setStatusMessage(null)
-      setApiTickets(null)
+      setApiTickets(null) // show skeletons while loading
       try {
         const res = await getMyTickets(token)
         if (!mounted) return
         setRawResponse(res)
-        if (res.success) {
-          setApiTickets(res.tickets)
+
+        const payload = (res as any)
+
+        let ticketsSource: any = []
+
+        if (Array.isArray(payload.tickets)) {
+          ticketsSource = payload.tickets
+        } else if (Array.isArray(payload.data)) {
+          ticketsSource = payload.data
+        } else if (Array.isArray(payload.data?.tickets)) {
+          ticketsSource = payload.data.tickets
+        } else if (Array.isArray(payload)) {
+          ticketsSource = payload
+        }
+
+        if (ticketsSource.length > 0) {
+          const normalized = ticketsSource.map((t: any) => ({
+            id: t._id ?? t.id ?? String(t.ticketId ?? t.ticket_id ?? t._id ?? ''),
+            subject: t.subject ?? t.title ?? 'No subject',
+            status: t.status ?? t.state ?? 'open',
+            createdAt: t.createdAt ?? t.created_at ?? t.date,
+            raw: t,
+          } as DisplayTicket))
+
+          setApiTickets(normalized)
+        } else if (payload.success === false) {
+          setStatusMessage(payload.message || 'Failed to fetch tickets')
         } else {
-          setStatusMessage(res.message || 'Failed to fetch tickets')
+          setApiTickets([])
         }
       } catch (err) {
         console.error(err)
@@ -90,10 +77,53 @@ export default function Tickets() {
       }
     }
 
-    load()
+    loadTickets()
 
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [token])
+  async function refreshTickets() {
+    if (!token) return
+    setStatusMessage(null)
+    setApiTickets(null)
+    try {
+      const res = await getMyTickets(token)
+      setRawResponse(res)
+
+      const payload = (res as any)
+      let ticketsSource: any = []
+
+      if (Array.isArray(payload.tickets)) {
+        ticketsSource = payload.tickets
+      } else if (Array.isArray(payload.data)) {
+        ticketsSource = payload.data
+      } else if (Array.isArray(payload.data?.tickets)) {
+        ticketsSource = payload.data.tickets
+      } else if (Array.isArray(payload)) {
+        ticketsSource = payload
+      }
+
+      if (ticketsSource.length > 0) {
+        const normalized = ticketsSource.map((t: any) => ({
+          id: t._id ?? t.id ?? String(t.ticketId ?? t.ticket_id ?? t._id ?? ''),
+          subject: t.subject ?? t.title ?? 'No subject',
+          status: t.status ?? t.state ?? 'open',
+          createdAt: t.createdAt ?? t.created_at ?? t.date,
+          raw: t,
+        } as DisplayTicket))
+
+        setApiTickets(normalized)
+      } else if (payload.success === false) {
+        setStatusMessage(payload.message || 'Failed to fetch tickets')
+      } else {
+        setApiTickets([])
+      }
+    } catch (err) {
+      console.error(err)
+      setStatusMessage('Network error while fetching tickets')
+    }
+  }
 
   return (
     <div className="space-y-6 p-2 sm:p-6 max-w-7xl mx-auto">
@@ -179,6 +209,13 @@ export default function Tickets() {
                     setSubject('')
                     setOrderApiId('')
                     if (document.getElementById('message')) (document.getElementById('message') as HTMLTextAreaElement).value = ''
+                    // Refresh the ticket list so the new ticket appears without a reload
+                    try {
+                      await refreshTickets()
+                    } catch (err) {
+                      // non-fatal: we still succeeded at creating the ticket
+                      console.error('refresh after create failed', err)
+                    }
                   } else {
                     setStatusMessage(res.message || 'Failed to submit ticket')
                   }
@@ -202,11 +239,38 @@ export default function Tickets() {
             <Headphones className="w-5 h-5 text-primary" />
             My support requests
           </h2>
-
           <div className="space-y-3">
-            {/* Render tickets from API if available, else fallback to static tickets */}
-            {(apiTickets ?? tickets).map((ticket: any) => {
-              const statusKey = (ticket.status || 'open').toLowerCase()
+            
+            {apiTickets === null ? (
+              // simple skeleton list (3 items)
+              [1, 2, 3].map((i) => (
+                <div
+                  key={`skeleton-${i}`}
+                  className="p-4 rounded-lg border bg-card animate-pulse"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 rounded bg-primary/20 w-3/4" />
+                      <div className="h-3 rounded bg-primary/10 w-1/4" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+    
+              (apiTickets.length ? apiTickets : []).map((ticket: any) => {
+             
+              const t = ticket && 'id' in ticket && 'subject' in ticket
+                ? ticket
+                : {
+                    id: ticket._id ?? ticket.id,
+                    subject: ticket.subject ?? ticket.title,
+                    status: ticket.status ?? ticket.state ?? 'open',
+                    createdAt: ticket.createdAt ?? ticket.date,
+                  }
+
+              const statusKey = (t.status || 'open').toLowerCase()
               const statusClass =
                 statusKey === 'closed'
                   ? 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-800 text-destructive'
@@ -218,7 +282,7 @@ export default function Tickets() {
 
               return (
                 <div
-                  key={ticket._id ?? ticket.id}
+                  key={t.id ?? ticket._id ?? ticket.id}
                   className="p-4 rounded-lg border bg-card hover:border-primary/40 transition-all cursor-pointer group overflow-hidden"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -228,19 +292,20 @@ export default function Tickets() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium group-hover:text-primary transition-colors break-words sm:truncate">
-                          {ticket.subject ?? ticket.title}
+                          {t.subject}
                         </p>
                         {/* Status badge */}
-                        <span className={`inline-block mt-2 sm:mt-1 px-2 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>{(ticket.status || 'open')}</span>
+                        <span className={`inline-block mt-2 sm:mt-1 px-2 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>{(t.status || 'open')}</span>
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground mt-2 sm:mt-0 sm:ml-4 sm:whitespace-nowrap">
-                      {ticket.createdAt ?? ticket.date}
+                      {t.createdAt}
                     </span>
                   </div>
                 </div>
               )
-            })}
+              })
+            )}
           </div>
 
         </Card>

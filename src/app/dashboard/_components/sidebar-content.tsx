@@ -38,7 +38,7 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
       }}
     >
       {/* Brand header */}
-      <div className="p-5 flex items-center justify-between border-b border-border">
+      <div className="p-[11.5px] flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-3">
           <div
             className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg"
@@ -53,12 +53,7 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
             >
               BEST SMM
             </span>
-            <span
-              className="text-xs sm:text-sm"
-              style={{ color: "var(--dashboard-text-secondary)" }}
-            >
-              SMM Panel
-            </span>
+           
           </div>
         </div>
 
