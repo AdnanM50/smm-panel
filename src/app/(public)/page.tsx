@@ -38,13 +38,13 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
 
-  // If user is authenticated, redirect to dashboard
+  // If user is authenticated, redirect to appropriate dashboard (role-aware)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      // If you want to enforce role based routing, inspect user.role here
-      router.replace('/dashboard')
+      if (user?.role === 'admin') router.replace('/admin-dashboard')
+      else router.replace('/dashboard')
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 landing-page">

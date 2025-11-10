@@ -35,7 +35,7 @@ interface AuthContextType {
     token?: string;
 }>;
   signup: (email: string, username: string, name: string, password: string) => Promise<{ success: boolean; message: string }>;
-  fetchProfileDetails: () => Promise<{ success: boolean; message: string }>;
+  fetchProfileDetails: () => Promise<{ success: boolean; message: string; user?: User }>;
   updateProfile: (profileData: UpdateProfileData) => Promise<{ success: boolean; message: string }>;
   verifyEmail: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyOTP: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
@@ -180,9 +180,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   try { console.debug('[Auth] login: token set', authToken?.slice?.(0,10) + '...') } catch {}
         setUser(userData);
         
-        // If login response didn't include full profile data, attempt to fetch it
-        // from the profileDetails endpoint so the rest of the app (dashboard)
-        // receives up-to-date user info immediately.
         (async () => {
           try {
             const { response: pRes, data: pData } = await cachedApiCall('/profileDetails', {
@@ -211,8 +208,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         })();
 
-        // Return status to match API-style responses so callers that check
-        // `result?.status === 'Success'` keep working.
         return { status: 'Success', success: true, message: "Login successful", token: authToken };
       }
 
@@ -375,7 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Exposed helper to fetch profile details on demand
-  const fetchProfileDetails = async (): Promise<{ success: boolean; message: string }> => {
+  const fetchProfileDetails = async (): Promise<{ success: boolean; message: string; user?: User }> => {
     if (!token) return { success: false, message: 'No token' }
     try {
       const { response, data } = await cachedApiCall('/profileDetails', {
@@ -396,7 +391,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: p.createdAt,
           updatedAt: p.updatedAt,
         });
-        return { success: true, message: 'Profile fetched' }
+        return { success: true, message: 'Profile fetched', user: {
+          _id: p._id,
+          id: p._id,
+          email: p.email,
+          username: p.username,
+          name: p.name,
+          balance: p.balance,
+          totalSpent: p.totalSpent,
+          role: p.role,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+        } }
       }
       return { success: false, message: data?.message || 'No profile data' }
     } catch (err) {

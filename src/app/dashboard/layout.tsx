@@ -37,7 +37,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     if (isLoading) return
 
-    if (!isAuthenticated || user?.role !== 'user') {
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+
+    // If an admin somehow lands on the user dashboard, forward to admin dashboard
+    if (user?.role === 'admin') {
+      router.push('/admin-dashboard')
+      return
+    }
+
+    // Block any roles other than 'user' from viewing the user dashboard
+    if (user?.role !== 'user') {
       router.push('/')
     }
   }, [isLoading, isAuthenticated, user, router])

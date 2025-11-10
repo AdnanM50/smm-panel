@@ -17,8 +17,7 @@ import { toast } from "sonner"
 
 export default function SignupPage() {
   const router = useRouter()
-  const { signup } = useAuth()
-  const { isLoading, isAuthenticated } = useAuth()
+  const { signup, isLoading, isAuthenticated, user } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -61,12 +60,13 @@ export default function SignupPage() {
     return true
   }
 
-  // Redirect already authenticated users away from signup page
+  // Redirect already authenticated users away from signup page (role-aware)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard')
+      if (user?.role === 'admin') router.replace('/admin-dashboard')
+      else router.replace('/dashboard')
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 import { ThemeProvider } from "@/context/theme-provider";
@@ -12,6 +14,24 @@ interface Props {
 }
 
 export default function AdminDashboardLayout({ children }: Props) {
+  const router = useRouter()
+  const { user, isLoading, isAuthenticated } = useAuth()
+
+  useEffect(() => {
+    if (isLoading) return
+
+    // If not authenticated, send to landing
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+
+    // If authenticated but not an admin, forward to their dashboard or landing
+    if (user?.role !== 'admin') {
+      if (user?.role === 'user') router.push('/dashboard')
+      else router.push('/')
+    }
+  }, [isLoading, isAuthenticated, user, router])
   return (
     <ThemeProvider>
       <SidebarProvider>

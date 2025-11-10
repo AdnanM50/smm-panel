@@ -18,7 +18,7 @@ import { toast } from "sonner"
 export default function LoginPage() {
   const router = useRouter()
   // Call the auth hook once and destructure what we need to avoid extra re-renders
-  const { login, isLoading, isAuthenticated } = useAuth()
+  const { login, isLoading, isAuthenticated, fetchProfileDetails, user } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -42,13 +42,17 @@ export default function LoginPage() {
 
       if (result?.success || result?.status === 'Success') {
         toast.success(result?.message || 'Login successful!')
-        // Use push and await to ensure navigation completes before refreshing.
-         router.push('/dashboard')
-        // try {
-        //   router.refresh()
-        // } catch (e) {
-        //   // refresh may not be available in some environments; ignore safely
-        // }
+
+        // Ensure we have the latest profile info (role, etc.) before routing.
+        try {
+          const profile = await fetchProfileDetails()
+          const role = profile?.user?.role || user?.role
+          if (role === 'admin') router.push('/admin-dashboard')
+          else router.push('/dashboard')
+        } catch (err) {
+          // Fallback to dashboard if anything goes wrong
+          router.push('/dashboard')
+        }
       } else {
         toast.error(result?.message || 'Login failed. Please try again.')
       }
@@ -59,12 +63,14 @@ export default function LoginPage() {
     }
   }
 
-  // Redirect already authenticated users away from login page
+  // Redirect already authenticated users away from login page (role-aware)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard')
+      // Prefer authoritative value from `user` if available
+      if (user?.role === 'admin') router.replace('/admin-dashboard')
+      else router.replace('/dashboard')
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
