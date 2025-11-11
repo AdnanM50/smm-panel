@@ -18,15 +18,13 @@ import {
   Layers,
   List as ListIcon,
   LifeBuoy,
-  X,
-  Settings,
+  X
 } from "lucide-react";
-// sidebar stays simple; header holds the avatar menu
+
 
 export default function AdminSidebar() {
   const { toggleSidebar } = useSidebar();
   return (
-    // SidebarProvider should wrap this from layout (so the trigger works)
     <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
       
 
@@ -74,7 +72,7 @@ export default function AdminSidebar() {
 
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/admin-dashboard/orders" className="flex items-center gap-2 w-full">
+                <Link href="/admin-dashboard/admin-orders" className="flex items-center gap-2 w-full">
                   <ListIcon className="h-4 w-4" />
                   <span>Orders</span>
                 </Link>
