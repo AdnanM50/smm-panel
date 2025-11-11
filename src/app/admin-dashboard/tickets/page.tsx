@@ -230,12 +230,12 @@ export default function AdminTicketsPage() {
     const isExpanded = expandedTicket === ticket._id
 
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 mb-3">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-mono text-gray-900 dark:text-white">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-xs sm:text-sm font-mono text-gray-900 dark:text-white truncate">
                 #{ticket._id?.slice(-8)}
               </span>
               {user?.role === 'admin' ? (
@@ -244,7 +244,7 @@ export default function AdminTicketsPage() {
                   onValueChange={(val) => updateTicketStatus(ticket._id!, val)}
                 >
                   <SelectTrigger
-                    className={`text-xs font-medium rounded-full px-2 py-1 border ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}
+                    className={`text-xs font-medium rounded-full px-2 py-1 border ${statusColors.bg} ${statusColors.text} ${statusColors.border} min-w-[80px]`}
                     disabled={Boolean(updatingIds[ticket._id || ''])}
                     size="sm"
                   >
@@ -270,7 +270,7 @@ export default function AdminTicketsPage() {
           </div>
           <button
             onClick={() => toggleTicketExpand(ticket._id!)}
-            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0 ml-2"
           >
             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
@@ -294,7 +294,7 @@ export default function AdminTicketsPage() {
 
           <div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Subject</div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-sm font-medium text-gray-900 dark:text-white break-words">
               {ticket.subject}
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function AdminTicketsPage() {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
             <div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Message</div>
-              <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 rounded p-3">
+              <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 rounded p-3 max-h-32 overflow-y-auto">
                 {ticket.message || 'No message provided'}
               </div>
             </div>
@@ -341,85 +341,85 @@ export default function AdminTicketsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 p-4 lg:p-6 ">
-      <div className=" ">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 p-3 sm:p-4 lg:p-6">
+      <div className="max-w-full">
         {/* Header */}
-        {/* <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
                 Support Tickets
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm lg:text-base">
+              <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs sm:text-sm lg:text-base">
                 Manage and respond to customer support tickets
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
                 <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-                <span className="hidden sm:inline">Refresh</span>
+                <span className="hidden xs:inline">Refresh</span>
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+              <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
                 <Download size={16} />
-                <span className="hidden sm:inline">Export</span>
+                <span className="hidden xs:inline">Export</span>
               </button>
             </div>
           </div>
 
- 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 lg:p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                 {tickets?.length || 0}
               </div>
-              <div className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">Total Tickets</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Tickets</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 lg:p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-xl lg:text-2xl font-bold text-yellow-600 dark:text-yellow-500">
+            <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600 dark:text-yellow-500">
                 {tickets?.filter(t => t.status?.toLowerCase() === 'open').length || 0}
               </div>
-              <div className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">Open</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Open</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 lg:p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-xl lg:text-2xl font-bold text-green-600 dark:text-green-500">
+            <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 dark:text-green-500">
                 {tickets?.filter(t => t.status?.toLowerCase() === 'resolved').length || 0}
               </div>
-              <div className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">Resolved</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Resolved</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 lg:p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-xl lg:text-2xl font-bold text-red-600 dark:text-red-500">
+            <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 dark:text-red-500">
                 {tickets?.filter(t => t.status?.toLowerCase() === 'closed').length || 0}
               </div>
-              <div className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">Closed</div>
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Closed</div>
             </div>
           </div>
-        </div> */}
+        </div>
 
         {/* Filters and Search */}
-        {/* <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
-          
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            {/* Search */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search tickets..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
               />
             </div>
 
-        
+            {/* Status Filter */}
             <div className="flex items-center gap-2 sm:w-48">
-              <Filter size={18} className="text-gray-400 hidden sm:block" />
+              <Filter size={16} className="text-gray-400 hidden sm:block" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                className="flex-1 px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm"
               >
                 <option value="all">All Status</option>
                 <option value="open">Open</option>
@@ -428,10 +428,11 @@ export default function AdminTicketsPage() {
               </select>
             </div>
 
+            {/* Clear Filters */}
             {(query || statusFilter !== 'all') && (
               <button
                 onClick={clearFilters}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors border border-gray-300 dark:border-gray-600 rounded-lg sm:border-none sm:px-3"
+                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors border border-gray-300 dark:border-gray-600 rounded-lg sm:border-none"
               >
                 <X size={16} />
                 <span className="sm:hidden">Clear</span>
@@ -439,40 +440,40 @@ export default function AdminTicketsPage() {
               </button>
             )}
           </div>
-        </div> */}
+        </div>
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             Showing {filtered?.length || 0} of {tickets?.length || 0} tickets
           </div>
         </div>
 
         {/* Tickets List - Mobile Cards & Desktop Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center p-8 lg:p-12">
+            <div className="flex items-center justify-center p-6 sm:p-8 lg:p-12">
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                <RefreshCw size={20} className="animate-spin" />
-                <span className="text-sm lg:text-base">Loading tickets...</span>
+                <RefreshCw size={18} className="animate-spin" />
+                <span className="text-sm sm:text-base">Loading tickets...</span>
               </div>
             </div>
           ) : error ? (
-            <div className="p-6 text-center">
-              <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="p-4 sm:p-6 text-center">
+              <div className="text-red-600 dark:text-red-400 text-xs sm:text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
                 {error}
               </div>
               <button
                 onClick={handleRefresh}
-                className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                className="mt-3 sm:mt-4 px-3 sm:px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
                 Try Again
               </button>
             </div>
           ) : tickets && tickets.length === 0 ? (
-            <div className="text-center p-8 lg:p-12">
-              <div className="text-gray-400 dark:text-gray-500 text-lg mb-2">No tickets found</div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+            <div className="text-center p-6 sm:p-8 lg:p-12">
+              <div className="text-gray-400 dark:text-gray-500 text-base sm:text-lg mb-2">No tickets found</div>
+              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-4">
                 {query || statusFilter !== 'all' 
                   ? 'Try adjusting your search or filters' 
                   : 'No support tickets have been created yet'
@@ -481,45 +482,45 @@ export default function AdminTicketsPage() {
               {(query || statusFilter !== 'all') && (
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                 >
                   Clear filters
                 </button>
               )}
             </div>
           ) : (
-            <>
+            <div className="w-[900px]">
               {/* Mobile View - Cards */}
-              <div className="block lg:hidden p-4">
+              <div className="block lg:hidden p-3 sm:p-4">
                 {filtered?.map((ticket) => (
                   <TicketCard key={ticket._id} ticket={ticket} />
                 ))}
               </div>
 
               {/* Desktop View - Table */}
-              <div className="hidden lg:block overflow-x-auto w-[800px]">
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Ticket ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Customer
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Order ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Subject & Message
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Created
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -532,23 +533,23 @@ export default function AdminTicketsPage() {
                           key={ticket._id} 
                           className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                         >
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-mono text-gray-900 dark:text-white">
                               #{ticket._id?.slice(-8)}
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 dark:text-white break-words max-w-[200px]">
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white break-words max-w-[150px] sm:max-w-[200px]">
                               {ticket.userEmail || '—'}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-mono text-gray-600 dark:text-gray-400">
                               {ticket.orderId || '—'}
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="max-w-[300px]">
+                          <td className="px-4 sm:px-6 py-4">
+                            <div className="max-w-[250px] sm:max-w-[300px]">
                               <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                 {ticket.subject}
                               </div>
@@ -557,7 +558,7 @@ export default function AdminTicketsPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             {user?.role === 'admin' ? (
                               <Select
                                 value={ticket.status || 'open'}
@@ -584,12 +585,12 @@ export default function AdminTicketsPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-600 dark:text-gray-400">
                               {formatDate(ticket.createdAt)}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <button 
                                 title="View Ticket"
@@ -611,7 +612,7 @@ export default function AdminTicketsPage() {
                   </tbody>
                 </table>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

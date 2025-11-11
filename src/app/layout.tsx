@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans">
-        <Suspense fallback={null}>
+        {/* <Suspense fallback={null}> */}
           <AuthProvider>
             {/* <ThemeProvider> */}
               {children}
@@ -31,8 +31,7 @@ export default function RootLayout({
               />
             {/* </ThemeProvider> */}
           </AuthProvider>
-        </Suspense>
-        {/* <Analytics /> */}
+        {/* </Suspense> */}
       </body>
     </html>
   );

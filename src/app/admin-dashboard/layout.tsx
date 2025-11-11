@@ -29,16 +29,24 @@ export default function AdminDashboardLayout({ children }: Props) {
       else router.push('/')
     }
   }, [isLoading, isAuthenticated, user, router])
+  
   return (
     <ThemeProvider>
       <SidebarProvider>
         <div className="min-h-screen flex bg-background text-dashboard-text-primary">
-          <AdminSidebar />
-          <div className="flex-1 flex flex-col">
+          {/* Sidebar - Hidden on mobile, shown on desktop */}
+          <div className="hidden md:block">
+            <AdminSidebar />
+          </div>
+          
+          <div className="flex-1 flex flex-col min-w-0 w-full"> {/* Added min-w-0 and w-full */}
             <AdminHeader />
 
-            <main className="pt-16 p-4 md:p-6 lg:p-8 w-full ">
-              {children}
+            {/* Main content with responsive padding */}
+            <main className="flex-1 pt-14 sm:pt-16 px-3 sm:px-4 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
+              <div className="w-full max-w-full mx-auto"> {/* Container for children */}
+                {children}
+              </div>
             </main>
           </div>
         </div>
