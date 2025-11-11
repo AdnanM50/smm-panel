@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react"
 
 import "./globals.css";
-import { ThemeProvider } from "@/context/theme-provider";
+// import { ThemeProvider } from "@/context/theme-provider";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "sonner";
 

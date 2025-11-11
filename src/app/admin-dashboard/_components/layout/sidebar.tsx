@@ -24,6 +24,13 @@ import {
 
 export default function AdminSidebar() {
   const { toggleSidebar } = useSidebar();
+  const menu = [
+    { href: "/admin-dashboard", label: "Dashboard", Icon: Home },
+    { href: "/admin-dashboard/users", label: "Users", Icon: Users },
+    // { href: "/admin-dashboard/services", label: "Services", Icon: Layers },
+    { href: "/admin-dashboard/admin-orders", label: "Orders", Icon: ListIcon },
+    { href: "/admin-dashboard/tickets", label: "Support", Icon: LifeBuoy },
+  ];
   return (
     <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
       
@@ -43,50 +50,16 @@ export default function AdminSidebar() {
 
           <nav aria-label="Admin navigation" className="px-2 mt-5 md:mt-20 py-2">
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin-dashboard" className="flex items-center gap-2 w-full">
-                  <Home className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin-dashboard/users" className="flex items-center gap-2 w-full">
-                  <Users className="h-4 w-4" />
-                  <span>Users</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin-dashboard/services" className="flex items-center gap-2 w-full">
-                  <Layers className="h-4 w-4" />
-                  <span>Services</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin-dashboard/admin-orders" className="flex items-center gap-2 w-full">
-                  <ListIcon className="h-4 w-4" />
-                  <span>Orders</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin-dashboard/tickets" className="flex items-center gap-2 w-full">
-                  <LifeBuoy className="h-4 w-4" />
-                  <span>Support</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {menu.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href} className="flex items-center gap-2 w-full">
+                    <item.Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         </nav>
         </div>
