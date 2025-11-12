@@ -191,7 +191,7 @@ export default function DashboardStats() {
   );
 
   return (
-    <div className="mt-16  rounded-2xl bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-100/20 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10 p-6">
+    <div className="md:mt-16 mt-6 w-full rounded-2xl bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-100/20 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10 p-6">
       <div className=" mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">

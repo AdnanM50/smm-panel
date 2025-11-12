@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useAuth } from '@/context/AuthContext'
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toster'
 import { toast as sonnerToast } from 'sonner'
-import { Trash2, RefreshCw } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
 
@@ -30,8 +30,10 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
   const { toast } = useToast()
+
+  // search state (filter by email)
+  const [searchEmail, setSearchEmail] = useState('')
 
   const fetchUsers = async () => {
     if (!token) {
@@ -70,7 +72,6 @@ export default function AdminUsersPage() {
       setUsers([])
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
@@ -83,6 +84,13 @@ export default function AdminUsersPage() {
     setConfirmOpen(true)
   }
 
+  // memoized filtered users by email (client-side)
+  const filteredUsers = useMemo(() => {
+    if (!users) return users
+    const q = searchEmail.trim().toLowerCase()
+    if (!q) return users
+    return users.filter((u) => (u.email || '').toLowerCase().includes(q))
+  }, [users, searchEmail])
   const handleConfirmDelete = async () => {
     if (!deletingId) return
     if (!token) {
@@ -90,8 +98,7 @@ export default function AdminUsersPage() {
       return
     }
 
-    setConfirmOpen(false)
-    setRefreshing(true)
+  setConfirmOpen(false)
     try {
       const res = await fetch(`${API_BASE_URL}/profileDelete/${deletingId}`, {
         method: 'DELETE',
@@ -113,53 +120,62 @@ export default function AdminUsersPage() {
       console.error('delete error', err)
       sonnerToast.error(String(err) || 'Network error')
     } finally {
-      setRefreshing(false)
+      
       setDeletingId(null)
     }
   }
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 p-4 my-9 lg:p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">Manage registered users</p>
         </div>
-        <div className="flex items-center gap-2">
-        
+
+        {/* controls: search + refresh */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <input
+            aria-label="Search by email"
+            value={searchEmail}
+            onChange={(e) => setSearchEmail(e.target.value)}
+            placeholder="Search by email"
+            className="w-full sm:w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-md px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
         </div>
       </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div className=" w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">Loading users...</div>
         ) : error ? (
           <div className="p-6 text-center text-red-600">{error}</div>
-        ) : users && users.length === 0 ? (
+        ) : filteredUsers && filteredUsers.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No users found</div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+        <div className="">
+            <div className="overflow-x-auto ">
+            <Table className="table-fixed ">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="whitespace-normal">Username</TableHead>
+                  <TableHead className="whitespace-normal">Name</TableHead>
+                  <TableHead className="whitespace-normal">Email</TableHead>
+                  <TableHead className="whitespace-normal">Role</TableHead>
+                  <TableHead className="whitespace-normal">Balance</TableHead>
+                  <TableHead className="whitespace-normal">Created</TableHead>
+                  <TableHead className="whitespace-normal">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users?.map((u) => (
+                {filteredUsers?.map((u) => (
                   <TableRow key={u._id}>
-                    <TableCell className="font-mono">{u.username || '—'}</TableCell>
-                    <TableCell>{u.name || '—'}</TableCell>
-                    <TableCell>{u.email || '—'}</TableCell>
-                    <TableCell>{u.role || 'user'}</TableCell>
-                    <TableCell>{typeof u.balance === 'number' ? u.balance.toFixed(4) : '—'}</TableCell>
-                    <TableCell>{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</TableCell>
+                    <TableCell className="font-mono whitespace-normal truncate max-w-[8rem] sm:max-w-[12rem]">{u.username || '—'}</TableCell>
+                    <TableCell className="whitespace-normal truncate max-w-[10rem] sm:max-w-[20rem]">{u.name || '—'}</TableCell>
+                    <TableCell className="whitespace-normal break-words truncate max-w-[12rem] sm:max-w-[28rem]">{u.email || '—'}</TableCell>
+                    <TableCell className="whitespace-normal truncate max-w-[6rem]">{u.role || 'user'}</TableCell>
+                    <TableCell className="whitespace-normal truncate max-w-[8rem]">{typeof u.balance === 'number' ? u.balance.toFixed(4) : '—'}</TableCell>
+                    <TableCell className="whitespace-normal truncate max-w-[12rem]">{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <button
@@ -176,10 +192,9 @@ export default function AdminUsersPage() {
               </TableBody>
             </Table>
           </div>
+        </div>
         )}
       </div>
-
-      {/* Confirmation Dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
@@ -193,5 +208,6 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
     </div>
+  </div>
   )
 }
