@@ -4,7 +4,7 @@ import { Suspense } from "react"
 import "./globals.css";
 // import { ThemeProvider } from "@/context/theme-provider";
 import { AuthProvider } from "@/context/AuthContext";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";
 
 
 export const metadata: Metadata = {
@@ -24,11 +24,7 @@ export default function RootLayout({
           <AuthProvider>
             {/* <ThemeProvider> */}
               {children}
-              <Toaster 
-                theme="dark" 
-                position="top-right"
-                richColors
-              />
+              <Toaster />
             {/* </ThemeProvider> */}
           </AuthProvider>
         {/* </Suspense> */}

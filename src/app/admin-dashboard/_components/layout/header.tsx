@@ -14,18 +14,9 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toster";
 import { useRouter } from "next/navigation";
 import { User, LogOut } from "lucide-react";
-
-/**
- * Theme toggle behavior:
- * - saves "theme" in localStorage as "light" | "dark"
- * - toggles `document.documentElement.classList` adding/removing "dark"
- * - on init it respects localStorage, otherwise system preference
- *
- * If your ThemeProvider already handles theme switching, replace the local logic
- * below with calls to that context instead.
- */
 
 interface Props {
   className?: string;
@@ -35,8 +26,7 @@ export default function AdminHeader({ className = "" }: Props) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const { user, logout } = useAuth();
   const router = useRouter();
-
-  // Initialize theme on mount
+  const { toast } = useToast();
   useEffect(() => {
     try {
       const saved = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -67,14 +57,13 @@ export default function AdminHeader({ className = "" }: Props) {
     }
   }
 
-  // toggle handler
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
     try {
       localStorage.setItem("theme", next);
     } catch (e) {
-      // ignore storage errors
+    console.log("🚀 ~ toggleTheme ~ e:", e)
     }
     applyTheme(next);
   }
@@ -111,10 +100,8 @@ export default function AdminHeader({ className = "" }: Props) {
             )}
           </button>
 
-          {/* Avatar + dropdown in header */}
           <div className="relative">
-            {/* Uncontrolled dropdown: let Radix manage open state so moving
-                between trigger and content doesn't unexpectedly close it. */}
+           
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -154,12 +141,21 @@ export default function AdminHeader({ className = "" }: Props) {
                 <div className="px-1 py-1">
                   <DropdownMenuItem
                     onSelect={(e) => {
-                      // onSelect fires before the menu closes — use it for logout
                       e.preventDefault();
-                      logout();
                       try {
-                        router.push("/login");
-                      } catch (err) {}
+                        logout();
+                        toast({
+                          title: "Logged out",
+                          description: "You have been signed out successfully.",
+                        });
+                      } catch (err) {
+                      console.log("🚀 ~ AdminHeader ~ err:", err)
+                      }
+                      setTimeout(() => {
+                        try {
+                          router.push("/login");
+                        } catch (err) {}
+                      }, 250);
                     }}
                     className="flex items-center gap-2"
                   >

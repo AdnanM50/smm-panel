@@ -35,7 +35,7 @@ export default function Tickets() {
     async function loadTickets() {
       if (!token) return
       setStatusMessage(null)
-      setApiTickets(null) // show skeletons while loading
+      setApiTickets(null) 
       try {
         const res = await getMyTickets(token)
         if (!mounted) return
@@ -166,8 +166,8 @@ export default function Tickets() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label htmlFor="orderId">Order ID (apiOrderId)</Label>
-              <Input id="orderId" value={orderApiId} onChange={(e) => setOrderApiId(e.target.value)} placeholder="Enter API Order ID (e.g. 7399585)" className="w-full dark:bg-input/60 dark:border-gray-700" />
+              <Label htmlFor="orderId">Order ID </Label>
+              <Input id="orderId" value={orderApiId} onChange={(e) => setOrderApiId(e.target.value)} placeholder="Enter your Order ID (e.g. 7399585)" className="w-full dark:bg-input/60 dark:border-gray-700" />
             </div>
 
             <div className="flex flex-col gap-1">
@@ -277,7 +277,7 @@ export default function Tickets() {
                   : statusKey === 'resolved'
                   ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800 text-success'
                   : statusKey === 'in-progress'
-                  ? 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800 text-accent'
+                  ? 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800 text-white'
                   : 'bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-800 text-warning'
 
               return (

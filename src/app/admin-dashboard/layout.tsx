@@ -32,25 +32,24 @@ export default function AdminDashboardLayout({ children }: Props) {
   
   return (
     <ThemeProvider>
-      <SidebarProvider>
-        <div className="min-h-screen flex bg-background text-dashboard-text-primary">
-          {/* Sidebar - Hidden on mobile, shown on desktop */}
-          <div className="hidden md:block">
-            <AdminSidebar />
-          </div>
-          
-          <div className="flex-1 flex flex-col min-w-0 w-full"> {/* Added min-w-0 and w-full */}
-            <AdminHeader />
-
-            {/* Main content with responsive padding */}
-            <main className="flex-1 pt-14 sm:pt-16 px-3 sm:px-4 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
-              <div className="w-full max-w-full mx-auto"> {/* Container for children */}
-                {children}
-              </div>
-            </main>
-          </div>
+   <SidebarProvider>
+      <div className="min-h-screen flex flex-col md:flex-row bg-background text-dashboard-text-primary w-full">
+        {/* Sidebar - Hidden on mobile, shown on desktop */}
+        <div className="hidden md:block md:w-auto flex-shrink-0">
+          <AdminSidebar />
         </div>
-      </SidebarProvider>
+
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col min-w-0 w-full">
+          <AdminHeader />
+
+          {/* Main content with responsive padding */}
+          <main className="flex-1 pt-14 sm:pt-16 overflow-x-hidden w-full">
+            <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 py-4 sm:py-6">{children}</div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
     </ThemeProvider>
   );
 }
