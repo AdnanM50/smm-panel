@@ -24,8 +24,6 @@ interface Props {
   selectedService: ApiServiceItem | null
   setSelectedService: (s: ApiServiceItem | null) => void
   setServices: (s: ApiServiceItem[]) => void
-
-  // Mass order
   moInput: string
   setMoInput: (v: string) => void
   moErrors: string[]
@@ -35,7 +33,6 @@ interface Props {
   moIsSubmitting: boolean
   handleMoSubmit: () => void
 
-  // Order form
   link: string
   setLink: (v: string) => void
   linkError: string | null

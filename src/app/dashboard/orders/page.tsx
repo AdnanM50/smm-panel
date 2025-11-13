@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Filter, MoreVertical, X, AlertTriangle, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation'
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { getUserOrders, cancelOrders, getStatusColor, formatDate, formatTime, type Order } from "./order-api";
@@ -17,13 +18,12 @@ export default function Orders() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [cancelModalOpen, setCancelModalOpen] = useState(false)
-  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null)
-  const [isCancelling, setIsCancelling] = useState(false)
+  // Cancel functionality temporarily disabled per request
+  // const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  // const [orderToCancel, setOrderToCancel] = useState<Order | null>(null)
+  // const [isCancelling, setIsCancelling] = useState(false)
+  const router = useRouter()
 
-  // Fetch orders, try context token first, then fallback to localStorage token so
-  // client navigation to this route loads orders automatically even if the
-  // AuthContext token hasn't been wired up yet when this component mounts.
   const fetchOrders = async (tokenOverride?: string) => {
     const tok = tokenOverride || token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null)
     if (!tok) return
@@ -52,39 +52,40 @@ export default function Orders() {
     if (token) fetchOrders(token)
   }, [token])
 
-  const handleCancelOrder = (order: Order) => {
-    setOrderToCancel(order)
-    setCancelModalOpen(true)
-  }
-
-  const confirmCancelOrder = async () => {
-    if (!orderToCancel || !token) return
-    
-    setIsCancelling(true)
-    try {
-      const result = await cancelOrders([orderToCancel._id], token)
-      
-      if (result.status === 'Success') {
-        toast.success("Order Cancelled", {
-          description: result.message
-        })
-        // Refresh orders list
-        await fetchOrders()
-        setCancelModalOpen(false)
-        setOrderToCancel(null)
-      } else {
-        toast.error("Cancellation Failed", {
-          description: result.message
-        })
-      }
-    } catch (error) {
-      toast.error("Error", {
-        description: "An error occurred while cancelling the order"
-      })
-    } finally {
-      setIsCancelling(false)
-    }
-  }
+  // Cancel handlers commented out - feature disabled
+  // const handleCancelOrder = (order: Order) => {
+  //   setOrderToCancel(order)
+  //   setCancelModalOpen(true)
+  // }
+  //
+  // const confirmCancelOrder = async () => {
+  //   if (!orderToCancel || !token) return
+  //   
+  //   setIsCancelling(true)
+  //   try {
+  //     const result = await cancelOrders([orderToCancel._id], token)
+  //     
+  //     if (result.status === 'Success') {
+  //       toast.success("Order Cancelled", {
+  //         description: result.message
+  //       })
+  //       // Refresh orders list
+  //       await fetchOrders()
+  //       setCancelModalOpen(false)
+  //       setOrderToCancel(null)
+  //     } else {
+  //       toast.error("Cancellation Failed", {
+  //         description: result.message
+  //       })
+  //     }
+  //   } catch (error) {
+  //     toast.error("Error", {
+  //       description: "An error occurred while cancelling the order"
+  //     })
+  //   } finally {
+  //     setIsCancelling(false)
+  //   }
+  // }
 
   // Filter orders based on search query
   const filteredOrders = orders.filter(order => {
@@ -273,7 +274,8 @@ export default function Orders() {
                   </div>
                   
                   <div className="flex items-center gap-2 pt-2">
-                    {order.status.toLowerCase() === 'processing' && (
+                    {/* Cancel button removed - cancel functionality disabled */}
+                    {/* {order.status.toLowerCase() === 'processing' && (
                       <Button 
                         variant="destructive" 
                         size="sm"
@@ -283,8 +285,8 @@ export default function Orders() {
                         <X className="mr-1 h-3 w-3" />
                         Cancel
                       </Button>
-                    )}
-                    <Button className="bg-gradient-primary flex-1" size="sm">
+                    )} */}
+                    <Button className="bg-gradient-primary flex-1" size="sm" onClick={() => router.push(`/dashboard?service=${order.serviceId}`)}>
                       Order Again
                     </Button>
                   </div>
@@ -319,8 +321,9 @@ export default function Orders() {
                       <span>Charge: ${order.charge.toFixed(4)}</span>
                       <span>Profit: ${order.profit.toFixed(4)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {order.status.toLowerCase() === 'processing' && (
+                      <div className="flex items-center gap-2">
+                      {/* Cancel button removed - cancel functionality disabled */}
+                      {/* {order.status.toLowerCase() === 'processing' && (
                         <Button 
                           variant="destructive" 
                           size="sm"
@@ -329,8 +332,8 @@ export default function Orders() {
                           <X className="mr-1 h-3 w-3" />
                           Cancel
                         </Button>
-                      )}
-                      <Button className="bg-gradient-primary" size="sm">
+                      )} */}
+                      <Button className="bg-gradient-primary" size="sm" onClick={() => router.push(`/dashboard?service=${order.serviceId}`)}>
                         Order Again
                       </Button>
                     </div>
@@ -362,7 +365,8 @@ export default function Orders() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</span>
-                    {order.status.toLowerCase() === 'processing' && (
+                    {/* Cancel button removed - cancel functionality disabled */}
+                    {/* {order.status.toLowerCase() === 'processing' && (
                       <Button 
                         variant="destructive" 
                         size="sm"
@@ -371,8 +375,8 @@ export default function Orders() {
                         <X className="mr-1 h-3 w-3" />
                         Cancel
                       </Button>
-                    )}
-                    <Button className="bg-gradient-primary" size="sm">
+                    )} */}
+                    <Button className="bg-gradient-primary" size="sm" onClick={() => router.push(`/dashboard?service=${order.serviceId}`)}>
                       Order Again
                     </Button>
                   </div>
@@ -383,69 +387,7 @@ export default function Orders() {
         )}
       </Card>
 
-      {/* Cancel Confirmation Modal - Responsive */}
-      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-        <DialogContent className="w-[95vw] max-w-[425px] sm:w-full">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Cancel Order
-            </DialogTitle>
-            <DialogDescription className="text-sm sm:text-base">
-              Are you sure you want to cancel this order? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {orderToCancel && (
-            <div className="py-3 sm:py-4">
-              <div className="p-3 sm:p-4 rounded-lg bg-muted/50 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {orderToCancel.apiOrderId}
-                  </Badge>
-                  <Badge className={`${getStatusColor(orderToCancel.status)} text-xs`}>
-                    {orderToCancel.status}
-                  </Badge>
-                </div>
-                <p className="font-medium text-sm sm:text-base leading-tight">{orderToCancel.serviceName}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>Quantity: {orderToCancel.quantity}</span>
-                  <span>Charge: ${orderToCancel.charge.toFixed(4)}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-2 ">
-            <Button
-              variant="outline"
-              onClick={() => setCancelModalOpen(false)}
-              disabled={isCancelling}
-              className="w-full sm:w-auto order-2 sm:order-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmCancelOrder}
-              disabled={isCancelling}
-              className="w-full sm:w-auto order-1 sm:order-2"
-            >
-              {isCancelling ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Cancelling...
-                </>
-              ) : (
-                <>
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel Order
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Cancel confirmation modal removed - cancel functionality disabled */}
     </div>
   );
 }
