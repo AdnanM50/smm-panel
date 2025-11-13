@@ -152,7 +152,8 @@ export default function AdminUsersPage() {
   const handleConfirmDelete = async () => {
     if (!deletingId) return
     if (!token) {
-      sonnerToast.error("Not authorized: Missing token")
+      // Use the app's toast system (Toaster) instead of external sonner
+      toast({ title: "Not authorized", description: "Missing token", variant: "destructive" })
       return
     }
 
@@ -164,15 +165,15 @@ export default function AdminUsersPage() {
       })
       const data = await res.json()
       if (res.ok && (data.status === "Success" || data.success)) {
-        sonnerToast.success(data.message || "User was removed")
+        toast({ title: "User removed", description: data.message || "User was removed" })
         setUsers((prev) => (prev ? prev.filter((u) => u._id !== deletingId) : prev))
       } else {
         console.warn("delete failed", data)
-        sonnerToast.error(data.message || "Could not delete user")
+        toast({ title: "Could not delete user", description: data.message || "Could not delete user", variant: "destructive" })
       }
     } catch (err: any) {
       console.error("delete error", err)
-      sonnerToast.error(String(err) || "Network error")
+  toast({ title: "Network error", description: String(err) || "Network error", variant: "destructive" })
     } finally {
       setDeletingId(null)
     }
