@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +24,7 @@ type User = {
   name?: string
   email?: string
   balance?: number
+  totalSpent?: number
   role?: string
   createdAt?: string
   updatedAt?: string
@@ -41,7 +42,16 @@ export default function AdminUsersPage() {
 
   const [searchEmail, setSearchEmail] = useState("")
 
-  const fetchUsers = async () => {
+  // Pagination state
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  // When the search query changes, reset to page 1
+  useEffect(() => {
+    setPage(1)
+  }, [searchEmail])
+
+  const fetchUsers = useCallback(async () => {
     if (!token) {
       setError("No auth token")
       return
@@ -66,6 +76,14 @@ export default function AdminUsersPage() {
         name: u.name,
         email: u.email,
         balance: u.balance,
+        totalSpent:
+          typeof u.totalSpent === "number"
+            ? u.totalSpent
+            : typeof u.totalSpent === "number"
+            ? u.totalSpent
+            : u.totalSpent
+            ? Number(u.totalSpent)
+            : undefined,
         role: u.role,
         createdAt: u.createdAt,
         raw: u,
@@ -79,11 +97,12 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
   useEffect(() => {
+    if (!token) return
     fetchUsers()
-  }, [token])
+  }, [token, fetchUsers])
 
   const handleDeleteClick = (id: string) => {
     setDeletingId(id)
@@ -96,6 +115,39 @@ export default function AdminUsersPage() {
     if (!q) return users
     return users.filter((u) => (u.email || "").toLowerCase().includes(q))
   }, [users, searchEmail])
+
+  const totalItems = filteredUsers ? filteredUsers.length : 0
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+    if (page < 1) setPage(1)
+  }, [page, totalPages])
+
+  const paginatedUsers = useMemo(() => {
+    if (!filteredUsers) return filteredUsers
+    const start = (page - 1) * pageSize
+    return filteredUsers.slice(start, start + pageSize)
+  }, [filteredUsers, page, pageSize])
+
+  // Page numbers to render (keeps number of buttons reasonable)
+  const pageNumbers = useMemo(() => {
+    const maxButtons = 7
+    if (totalPages <= maxButtons) return Array.from({ length: totalPages }, (_, i) => i + 1)
+    let start = Math.max(1, page - 3)
+    let end = Math.min(totalPages, page + 3)
+    if (start === 1) end = Math.min(totalPages, maxButtons)
+    if (end === totalPages) start = Math.max(1, totalPages - maxButtons + 1)
+    const out: number[] = []
+    for (let i = start; i <= end; i++) out.push(i)
+    return out
+  }, [page, totalPages])
+
+  // helper to format amounts; keep cents for >= $1, more precision for small values
+  const formatAmount = (v?: number) => {
+    if (typeof v !== "number") return "—"
+    if (Math.abs(v) >= 1) return `$${v.toFixed(2)}`
+    return `$${v.toFixed(4)}`
+  }
 
   const handleConfirmDelete = async () => {
     if (!deletingId) return
@@ -165,19 +217,24 @@ export default function AdminUsersPage() {
                     <th className="text-left px-3 sm:px-4 py-3 font-semibold">Email</th>
                     <th className="text-left px-3 sm:px-4 py-3 font-semibold">Role</th>
                     <th className="text-left px-3 sm:px-4 py-3 font-semibold">Balance</th>
-                    <th className="text-left px-3 sm:px-4 py-3 font-semibold">Created</th>
+                    <th className="text-left px-3 sm:px-4 py-3 font-semibold">Total Spent</th>
+                    <th className="text-left px-3 sm:px-4 py-3 font-semibold">Joining date</th>
                     <th className="text-left px-3 sm:px-4 py-3 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers?.map((u) => (
+                  {paginatedUsers?.map((u) => (
                     <tr
                       key={u._id}
                       className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
                       <td className="px-3 sm:px-4 py-3 font-mono text-xs sm:text-sm">{u.username || "—"}</td>
                       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm truncate">{u.name || "—"}</td>
-                      <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm break-all">{u.email || "—"}</td>
+                      <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm max-w-[18rem]">
+                        <div className="truncate" title={u.email}>
+                          {u.email || "—"}
+                        </div>
+                      </td>
                       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm">
                         <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs">
                           {u.role || "user"}
@@ -185,6 +242,9 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium">
                         {typeof u.balance === "number" ? `$${u.balance.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium">
+                        {formatAmount(u.totalSpent)}
                       </td>
                       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
@@ -216,12 +276,16 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers?.map((u) => (
+                  {paginatedUsers?.map((u) => (
                     <tr
                       key={u._id}
                       className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
-                      <td className="px-3 py-3 text-xs break-all">{u.email || "—"}</td>
+                      <td className="px-3 py-3 text-xs max-w-[14rem]">
+                        <div className="truncate" title={u.email}>
+                          {u.email || "—"}
+                        </div>
+                      </td>
                       <td className="px-3 py-3 text-xs truncate">{u.name || "—"}</td>
                       <td className="px-3 py-3 text-xs">
                         <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs">
@@ -230,6 +294,9 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-3 py-3 text-xs font-medium">
                         {typeof u.balance === "number" ? `$${u.balance.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="px-3 py-3 text-xs font-medium">
+                        {formatAmount(u.totalSpent)}
                       </td>
                       <td className="px-3 py-3 text-center">
                         <button
@@ -247,7 +314,7 @@ export default function AdminUsersPage() {
             </div>
 
             <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredUsers?.map((u) => (
+              {paginatedUsers?.map((u) => (
                 <div key={u._id} className="p-4 space-y-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   {/* Header row with email and delete button */}
                   <div className="flex items-start justify-between gap-2">
@@ -255,7 +322,10 @@ export default function AdminUsersPage() {
                       <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Email
                       </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white break-all mt-0.5">
+                      <p
+                        className="text-sm font-medium text-gray-900 dark:text-white break-words mt-0.5 truncate"
+                        title={u.email}
+                      >
                         {u.email || "—"}
                       </p>
                     </div>
@@ -289,7 +359,7 @@ export default function AdminUsersPage() {
                   </div>
 
                   {/* Balance and Created date */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <div>
                       <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Balance
@@ -300,7 +370,15 @@ export default function AdminUsersPage() {
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Created
+                        Total Spent
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white mt-0.5">
+                        {formatAmount(u.totalSpent)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Joining date
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
@@ -320,10 +398,102 @@ export default function AdminUsersPage() {
                 </div>
               ))}
             </div>
+
+          {/* Pagination controls - moved inside the content card so it appears as the card footer */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600 dark:text-gray-400">Show</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value))
+                    setPage(1)
+                  }}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded px-2 py-1"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-gray-600 dark:text-gray-400">per page</span>
+              </div>
+
+              {/* Full controls for small+ and up */}
+              <div className="hidden sm:flex items-center gap-2 text-sm">
+                {/* First button removed to simplify controls */}
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 disabled:opacity-50"
+                >
+                  Prev
+                </button>
+
+                <div className="flex items-center gap-1 px-2">
+                  {pageNumbers[0] > 1 && (
+                    <button onClick={() => setPage(1)} className="px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                      1
+                    </button>
+                  )}
+                  {pageNumbers[0] > 2 && <span className="px-1 text-gray-500">…</span>}
+                  {pageNumbers.map((pn) => (
+                    <button
+                      key={pn}
+                      onClick={() => setPage(pn)}
+                      aria-current={pn === page}
+                      className={
+                        pn === page
+                          ? "px-2 py-1 rounded border bg-blue-600 text-white border-blue-600"
+                          : "px-2 py-1 rounded border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                      }
+                    >
+                      {pn}
+                    </button>
+                  ))}
+                  {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && <span className="px-1 text-gray-500">…</span>}
+                  {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                    <button onClick={() => setPage(totalPages)} className="px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                      {totalPages}
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 disabled:opacity-50"
+                >
+                  Next
+                </button>
+                {/* Last button removed to simplify controls */}
+
+                <div className="ml-3 text-sm text-gray-600 dark:text-gray-400">Page {page} of {totalPages} — {totalItems} users</div>
+              </div>
+
+              {/* Compact controls for xs */}
+              <div className="flex sm:hidden items-center gap-2 text-sm">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 disabled:opacity-50"
+                >
+                  Prev
+                </button>
+                <div className="px-2 text-sm text-gray-600 dark:text-gray-400">{page} / {totalPages}</div>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
           </>
         )}
       </div>
-
       {/* Delete confirmation dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="w-[90vw] sm:w-full mx-auto">
