@@ -1,4 +1,3 @@
-// components/services/ServicesClient.tsx
 "use client"
 import React, { useEffect, useMemo, useState } from "react"
 import { useRouter } from 'next/navigation'
@@ -17,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Search, Eye, ShoppingCart, Copy, Check } from "lucide-react"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import {
   Select,
   SelectTrigger,
@@ -78,7 +78,6 @@ export default function ServicesClient({ initialServices = [] }: Props) {
     try {
       const services = await fetchServicesFromApi({
         profit: 10,
-        // page & limit left as defaults (API default page=1, limit=100)
         token: token ?? undefined,
       })
 
@@ -90,18 +89,12 @@ export default function ServicesClient({ initialServices = [] }: Props) {
     }
   }
 
-  // If initial empty and token appears, try fetch
   useEffect(() => {
-    // Always try to fetch services when this component mounts and token is available.
-    // If `initialServices` were provided by server rendering they will be used instead.
     if (token) {
-      // If we already have initial services don't force-refresh, otherwise fetch.
       if (!initialServices || initialServices.length === 0) fetchServices()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
-  // Debounced search: wait until typing stops, then run a cancellable batched search.
   const debouncedQuery = useDebounce(query, 300)
 
   const openReview = (svc: ApiServiceItem) => {
@@ -146,12 +139,10 @@ export default function ServicesClient({ initialServices = [] }: Props) {
         }
         return
       }
-
-      // Tunable params for faster searches with lower load
       const maxPages = 30
       const pageSize = 100
       const batchSize = 8
-      const maxResults = 200 // stop after collecting this many matches
+      const maxResults = 200
 
       let page = 1
       const isIdSearch = /^\d+$/.test(q)
@@ -228,18 +219,18 @@ export default function ServicesClient({ initialServices = [] }: Props) {
   const grouped = useMemo(() => groupServicesByPlatform(filtered), [filtered])
   const groupNames = useMemo(() => Object.keys(grouped).sort(), [grouped])
 
-  // A fixed list of common platforms we want to always show as quick filters
-  const allPlatforms = [
-    "Facebook",
-    "Instagram",
-    "Spotify",
-    "TikTok",
-    "Twitch",
-    "Twitter",
-    "YouTube",
-    "SoundCloud",
-    "LinkedIn",
-  ]
+  
+  // const allPlatforms = [
+  //   "Facebook",
+  //   "Instagram",
+  //   "Spotify",
+  //   "TikTok",
+  //   "Twitch",
+  //   "Twitter",
+  //   "YouTube",
+  //   "SoundCloud",
+  //   "LinkedIn",
+  // ]
 
   return (
     <div className="space-y-6">
@@ -330,28 +321,35 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                     </TableHeader>
                     <TableBody>
                       {searchResults.map((service) => (
-                        <TableRow key={`search-${service.service}`} className="hover:bg-muted/50">
-                          <TableCell>
+                        <TableRow key={`search-${service.service}`} className="hover:bg-muted/50 items-center">
+                          <TableCell className="whitespace-nowrap">
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <span className="text-muted-foreground">☆</span>
                             </Button>
                           </TableCell>
-                          <TableCell className="font-medium">{service.service}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{service.name}</p>
-                              <p className="text-sm text-muted-foreground">Type: {service.type || "Default"}</p>
+                          <TableCell className="font-medium whitespace-nowrap">{service.service}</TableCell>
+                          <TableCell className="max-w-[48ch]">
+                            <div className="flex items-center gap-3">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <p className="font-medium truncate max-w-[44ch]">{service.name}</p>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs break-words">{service.name}</TooltipContent>
+                              </Tooltip>
+                              {service.type && service.type.toLowerCase() !== 'default' && (
+                                <p className="text-sm text-muted-foreground whitespace-nowrap">Type: {service.type}</p>
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell className="font-semibold">{service.userRate != null ? `$${service.userRate.toFixed(4)}` : ''}</TableCell>
-                          <TableCell>{service.min} - {service.max}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-semibold whitespace-nowrap">{service.userRate != null ? `$${service.userRate.toFixed(4)}` : ''}</TableCell>
+                          <TableCell className="whitespace-nowrap">{service.min} - {service.max}</TableCell>
+                          <TableCell className="whitespace-nowrap">
                             <Button variant="outline" size="sm" onClick={() => openReview(service)}>
                               <Eye className="mr-2 h-4 w-4" />
                               Review
                             </Button>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right whitespace-nowrap">
                             <Button className="bg-gradient-primary" size="sm" onClick={() => router.push(`/dashboard?service=${service.service}`)}>
                               <ShoppingCart className="mr-2 h-4 w-4" />
                               Buy
@@ -397,28 +395,35 @@ export default function ServicesClient({ initialServices = [] }: Props) {
                   </TableHeader>
                   <TableBody>
                     {services.map((service) => (
-                      <TableRow key={service.service} className="hover:bg-muted/50">
-                        <TableCell>
+                      <TableRow key={service.service} className="hover:bg-muted/50 items-center">
+                        <TableCell className="whitespace-nowrap">
                           <Button variant="ghost" size="icon" className="h-8 w-8">
                             <span className="text-muted-foreground">☆</span>
                           </Button>
                         </TableCell>
-                        <TableCell className="font-medium">{service.service}</TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{service.name}</p>
-                            <p className="text-sm text-muted-foreground">Type: {service.type || "Default"}</p>
+                        <TableCell className="font-medium whitespace-nowrap">{service.service}</TableCell>
+                        <TableCell className="max-w-[48ch]">
+                          <div className="flex items-center gap-3">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="font-medium truncate max-w-[44ch]">{service.name}</p>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs break-words">{service.name}</TooltipContent>
+                            </Tooltip>
+                            {service.type && service.type.toLowerCase() !== 'default' && (
+                              <p className="text-sm text-muted-foreground whitespace-nowrap">Type: {service.type}</p>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell className="font-semibold">{service.userRate != null ? `$${service.userRate.toFixed(4)}` : ''}</TableCell>
-                        <TableCell>{service.min} - {service.max}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-semibold whitespace-nowrap">{service.userRate != null ? `$${service.userRate.toFixed(4)}` : ''}</TableCell>
+                        <TableCell className="whitespace-nowrap">{service.min} - {service.max}</TableCell>
+                        <TableCell className="whitespace-nowrap">
                           <Button variant="outline" size="sm" onClick={() => openReview(service)}>
                             <Eye className="mr-2 h-4 w-4" />
                             Review
                           </Button>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right whitespace-nowrap">
                           <Button className="bg-gradient-primary" size="sm" onClick={() => router.push(`/dashboard?service=${service.service}`)}>
                             <ShoppingCart className="mr-2 h-4 w-4" />
                             Buy

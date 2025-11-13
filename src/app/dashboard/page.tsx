@@ -297,7 +297,7 @@ const totalSpent = user?.totalSpent ?? 0
     if (!selectedService || !quantity) return 0
     const qty = parseFloat(quantity)
     if (isNaN(qty)) return 0
-    const rate = (selectedService.userRate ?? selectedService.rate)
+  const rate = (selectedService.userRate ?? 0)
     // API rates are per 1000 units — convert to per-unit price
     return (rate / 1000) * qty
   }, [selectedService, quantity])
@@ -310,7 +310,7 @@ const totalSpent = user?.totalSpent ?? 0
     if (!validateLink(link)) return
     setIsSubmitting(true)
     try {
-      const orderData: PlaceOrderRequest = { serviceId: selectedService.service, link: link.trim(), profit: selectedService.userRate || selectedService.rate, quantity: qty }
+  const orderData: PlaceOrderRequest = { serviceId: selectedService.service, link: link.trim(), profit: selectedService.userRate ?? 0, quantity: qty }
       const result = await placeNewOrder(orderData, token)
       if (result.success) {
         toast.success("Order placed successfully!", { description: `Order ID: ${result.order.apiOrderId}` })
@@ -323,7 +323,6 @@ const totalSpent = user?.totalSpent ?? 0
     } finally { setIsSubmitting(false) }
   }, [selectedService, link, quantity, token, validateLink])
 
-  // UI render (structure preserved, internals simplified)
   return (
     <div className="space-y-6">
       {/* Stats */}

@@ -38,7 +38,7 @@ export async function submitMassOrder(
     // Create a map of service ID to userRate for quick lookup
     const serviceRateMap = new Map<number, number>()
     allServices.forEach(service => {
-      serviceRateMap.set(service.service, service.userRate || service.rate)
+      serviceRateMap.set(service.service, service.userRate ?? 0)
     })
 
     // Calculate total profit (rates are per 1000 units)
@@ -131,7 +131,7 @@ export async function calculateTotalProfit(
     // Create a map of service ID to userRate for quick lookup
     const serviceRateMap = new Map<number, number>()
     allServices.forEach(service => {
-      serviceRateMap.set(service.service, service.userRate || service.rate)
+      serviceRateMap.set(service.service, service?.userRate ?? 0)
     })
 
     // Calculate total profit (rates are per 1000 units)

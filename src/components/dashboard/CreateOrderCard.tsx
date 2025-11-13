@@ -1,17 +1,17 @@
 "use client"
-import React from "react"
+import React, { CSSProperties } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Search, Plus, FileStack, Info, AlertCircle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Search, Plus, FileStack, Info, AlertCircle, CheckCircle2, XCircle, RefreshCw, Slash } from "lucide-react"
 import type { ApiServiceItem } from "@/app/dashboard/services/service-api"
 import type { MassOrderItem } from "@/app/dashboard/mass-order/massOrder-api"
 
 interface Props {
-  // UI state & handlers (passed from page)
   isMassMode: boolean
   setIsMassMode: React.Dispatch<React.SetStateAction<boolean>>
   dynamicPlatforms: string[]
@@ -87,6 +87,47 @@ export default function CreateOrderCard({
     Telegram: undefined,
   }
 
+  const getPlatformPillStyles = (isActive: boolean): CSSProperties => ({
+    backgroundColor: isActive ? 'var(--dashboard-pill-active-bg)' : 'var(--dashboard-pill-bg)',
+    borderColor: isActive ? 'var(--dashboard-pill-active-border)' : 'var(--dashboard-pill-border)',
+    color: isActive ? 'var(--dashboard-pill-active-text)' : 'var(--dashboard-pill-text)',
+  })
+
+  const renderPlatformButtons = (groupIndex: number) => (
+    <>
+      <Button
+        key={`platform-all-${groupIndex}`}
+        size="sm"
+        variant="outline"
+        className="whitespace-nowrap transition-colors"
+        style={getPlatformPillStyles(selectedPlatform === 'All')}
+        onClick={() => handlePlatformSelect('All')}
+      >
+        <Plus className="h-4 w-4 mr-1" />
+        All
+      </Button>
+
+      {dynamicPlatforms.map((name, index) => {
+        const IconComponent = iconMap[name] || Plus
+        const isSelected = selectedPlatform === name
+
+        return (
+          <Button
+            key={`platform-${groupIndex}-${name}-${index}`}
+            size="sm"
+            variant="outline"
+            className="whitespace-nowrap transition-colors"
+            style={getPlatformPillStyles(isSelected)}
+            onClick={() => handlePlatformSelect(name)}
+          >
+            <IconComponent className="h-4 w-4 mr-1" />
+            {name}
+          </Button>
+        )
+      })}
+    </>
+  )
+
   // Safely parse quantity to a number (fallback to 0)
   const parsedQuantity = (() => {
     if (!quantity) return 0
@@ -95,7 +136,7 @@ export default function CreateOrderCard({
   })()
 
   // Determine rate: userRate if present, otherwise default rate, otherwise 0
-  const rate = selectedService ? (selectedService.userRate ?? selectedService.rate ?? 0) : 0
+  const rate = selectedService ? (selectedService.userRate ?? selectedService?.userRate ?? 0) : 0
 
   // Compute total charge as userRate * quantity (as requested)
   const computedTotal = rate * parsedQuantity
@@ -122,33 +163,21 @@ export default function CreateOrderCard({
 
         <div className="marquee-container pb-2">
           <div className="marquee-track">
-            <div className="marquee-group inline-flex items-center gap-2 pr-4">
-              {dynamicPlatforms.length === 0 ? (
+            {dynamicPlatforms.length === 0 ? (
+              <div className="marquee-group inline-flex flex-shrink-0 items-center gap-2 pr-4">
                 <div className="inline-flex items-center gap-2">
                   <Skeleton className="h-8 w-14 rounded-full" />
                   <Skeleton className="h-8 w-10 rounded-full" />
                   <Skeleton className="h-8 w-20 rounded-full" />
                 </div>
-              ) : (
-                <>
-                  <Button size="sm" className="whitespace-nowrap" style={{ backgroundColor: selectedPlatform === 'All' ? 'var(--dashboard-blue)' : 'var(--input)', color: selectedPlatform === 'All' ? 'white' : 'var(--dashboard-text-primary)' }} onClick={() => handlePlatformSelect('All')}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    All
-                  </Button>
-
-                  {dynamicPlatforms.map((name) => {
-                    const IconComponent = iconMap[name] || Plus
-                    const isSelected = selectedPlatform === name
-                    return (
-                      <Button key={name} size="sm" variant="outline" className="whitespace-nowrap" style={{ backgroundColor: isSelected ? 'var(--dashboard-blue)' : 'var(--input)', borderColor: isSelected ? 'var(--dashboard-blue)' : 'var(--border)', color: isSelected ? 'white' : 'var(--dashboard-text-primary)' }} onClick={() => handlePlatformSelect(name)}>
-                        <IconComponent className="h-4 w-4 mr-1" />
-                        {name}
-                      </Button>
-                    )
-                  })}
-                </>
-              )}
-            </div>
+              </div>
+            ) : (
+              [0, 1].map((groupIndex) => (
+                <div key={groupIndex} className="marquee-group inline-flex flex-shrink-0 items-center gap-2 pr-4">
+                  {renderPlatformButtons(groupIndex)}
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -196,14 +225,14 @@ export default function CreateOrderCard({
                 <div className="max-h-80 overflow-y-auto border rounded-lg bg-background">
                   {selectedService ? (
                     <div key={selectedService.service} onClick={() => setSelectedService(selectedService)} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors">
-                      <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{selectedService.service} - {selectedService.name}</div><div className="text-xs text-muted-foreground">Rate: ${selectedService.userRate || selectedService.rate} | Min: {selectedService.min} | Max: {selectedService.max}</div></div><div className="text-xs text-muted-foreground">{selectedService.category}</div></div>
+                      <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{selectedService.service} - {selectedService.name}</div><div className="text-xs text-muted-foreground">Rate: ${selectedService.userRate || selectedService?.userRate} | Min: {selectedService.min} | Max: {selectedService.max}</div></div><div className="text-xs text-muted-foreground">{selectedService.category}</div></div>
                     </div>
                   ) : isSearching ? (
                     <div className="space-y-2 p-2">{[...Array(5)].map((_, i) => <div key={i} className="p-3 border-b last:border-b-0"><div className="flex items-center justify-between"><div className="flex-1 space-y-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/2" /></div><Skeleton className="h-3 w-16" /></div></div>)}</div>
                   ) : services.length > 0 ? (
                     services.map((service) => (
                       <div key={service.service} onClick={() => { setSelectedService(service); setSearchQuery(service.name); setServices([]) }} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors">
-                        <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service.rate} | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
+                        <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service?.userRate} | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
                       </div>
                     ))
                   ) : (<div className="p-6 text-center text-muted-foreground">No {selectedPlatform} services found</div>)}
@@ -214,10 +243,80 @@ export default function CreateOrderCard({
             {selectedPlatform === 'All' && services.length > 0 && (
               <div className="max-h-60 overflow-y-auto border rounded-lg bg-background">
                 {services.map((service) => (
-                  <div key={service.service} onClick={() => { setSelectedService(service); setSearchQuery(service.name); setServices([]) }} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0">
-                    <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service.rate} | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
+                    <div key={service.service} onClick={() => { setSelectedService(service); setSearchQuery(service.name); setServices([]) }} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0">
+                    <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service?.userRate} | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {selectedService && (
+              <div
+                className="space-y-3 rounded-lg border px-4 py-3"
+                style={{
+                  backgroundColor: 'var(--dashboard-pill-bg)',
+                  borderColor: 'var(--dashboard-pill-border)',
+                }}
+              >
+                <div className="flex flex-wrap items-start gap-3">
+                  {selectedService.cancel ? (
+                    <CheckCircle2 className="h-5 w-5" style={{ color: 'var(--dashboard-green)' }} />
+                  ) : (
+                    <XCircle className="h-5 w-5" style={{ color: 'var(--dashboard-red)' }} />
+                  )}
+                  <div className="flex-1 min-w-[12rem] space-y-1">
+                    <Badge
+                      variant="outline"
+                      className="uppercase tracking-wide"
+                      style={{
+                        borderColor: 'var(--dashboard-pill-border)',
+                        color: 'var(--dashboard-pill-text)',
+                      }}
+                    >
+                      Cancellation
+                    </Badge>
+                    <p className="text-sm" style={{ color: 'var(--dashboard-text-primary)' }}>
+                      {selectedService.cancel
+                        ? 'You can request a cancellation while the order is processing.'
+                        : 'This service cannot be cancelled once the order is placed.'}
+                    </p>
+                    {!selectedService.cancel && (
+                      <p className="text-xs" style={{ color: 'var(--dashboard-text-muted)' }}>
+                        Double-check the link and quantity before submitting.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-start gap-3">
+                  {selectedService.refill ? (
+                    <RefreshCw className="h-5 w-5" style={{ color: 'var(--dashboard-blue)' }} />
+                  ) : (
+                    <Slash className="h-5 w-5" style={{ color: 'var(--dashboard-text-muted)' }} />
+                  )}
+                  <div className="flex-1 min-w-[12rem] space-y-1">
+                    <Badge
+                      variant="outline"
+                      className="uppercase tracking-wide"
+                      style={{
+                        borderColor: 'var(--dashboard-pill-border)',
+                        color: 'var(--dashboard-pill-text)',
+                      }}
+                    >
+                      Refill
+                    </Badge>
+                    <p className="text-sm" style={{ color: 'var(--dashboard-text-primary)' }}>
+                      {selectedService.refill
+                        ? 'Refill requests are available if the counts drop after completion.'
+                        : 'Refill is not offered for this service.'}
+                    </p>
+                    {selectedService.refill && (
+                      <p className="text-xs" style={{ color: 'var(--dashboard-text-muted)' }}>
+                        Please check the provider rules for the allowed refill window.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

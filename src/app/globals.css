@@ -49,6 +49,12 @@
   --dashboard-bg-main: #f8fafc;
   --dashboard-bg-card: #ffffff;
   --dashboard-bg-sidebar: #ffffff;
+  --dashboard-pill-bg: var(--input);
+  --dashboard-pill-text: var(--dashboard-text-primary);
+  --dashboard-pill-border: var(--border);
+  --dashboard-pill-active-bg: #e0edff;
+  --dashboard-pill-active-text: #1d4ed8;
+  --dashboard-pill-active-border: rgba(59, 130, 246, 0.5);
 }
 
 .dark {
@@ -96,6 +102,12 @@
   --dashboard-bg-main: #0f172a;
   --dashboard-bg-card: #1e293b;
   --dashboard-bg-sidebar: #0f172a;
+  --dashboard-pill-bg: rgba(30, 41, 59, 0.65);
+  --dashboard-pill-text: var(--dashboard-text-primary);
+  --dashboard-pill-border: rgba(148, 163, 184, 0.25);
+  --dashboard-pill-active-bg: rgba(59, 130, 246, 0.35);
+  --dashboard-pill-active-text: #f8fafc;
+  --dashboard-pill-active-border: rgba(59, 130, 246, 0.65);
 }
 
 @theme inline {
@@ -884,10 +896,14 @@
 }
 
 .marquee-track {
-  display: inline-flex;
+  display: flex;
   white-space: nowrap;
-  width: auto;
+  width: max-content;
   animation: marquee-scroll 18s linear infinite;
+}
+
+.marquee-group {
+  flex-shrink: 0;
 }
 
 @keyframes marquee-scroll {
