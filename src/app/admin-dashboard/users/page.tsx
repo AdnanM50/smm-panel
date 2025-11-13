@@ -12,7 +12,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toster"
-import { toast as sonnerToast } from "sonner"
 import { Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
