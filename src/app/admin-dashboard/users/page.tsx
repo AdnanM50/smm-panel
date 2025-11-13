@@ -38,10 +38,7 @@ export default function AdminUsersPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const { toast } = useToast()
-
   const [searchEmail, setSearchEmail] = useState("")
-
-  // Pagination state
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
