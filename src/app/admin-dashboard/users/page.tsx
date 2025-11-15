@@ -418,7 +418,6 @@ export default function AdminUsersPage() {
 
               {/* Full controls for small+ and up */}
               <div className="hidden sm:flex items-center gap-2 text-sm">
-                {/* First button removed to simplify controls */}
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
@@ -491,7 +490,6 @@ export default function AdminUsersPage() {
           </>
         )}
       </div>
-      {/* Delete confirmation dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="w-[90vw] sm:w-full mx-auto">
           <DialogHeader>

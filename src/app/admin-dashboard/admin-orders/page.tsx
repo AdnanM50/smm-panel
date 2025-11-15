@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Ban, Loader2, Search } from "lucide-react"
+import { Ban, Loader2, Search, RefreshCw } from "lucide-react"
 import { toast } from "@/hooks/use-toster"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -15,6 +15,8 @@ const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
 type AdminOrder = {
   _id: string
   email: string
+  cancel?: boolean
+  refill?: boolean
   serviceId?: number
   serviceName?: string
   link?: string
@@ -38,6 +40,7 @@ export default function AdminOrdersPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [bulkCancelling, setBulkCancelling] = useState(false)
+  const [bulkRefilling, setBulkRefilling] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     if (!token) return
@@ -66,6 +69,8 @@ export default function AdminOrdersPage() {
         .map((item) => ({
           _id: String(item._id ?? item.id),
           email: item.email ?? item.userEmail ?? "",
+  cancel: !!item.cancel,
+  refill: !!item.refill,
           serviceId: typeof item.serviceId === "number" ? item.serviceId : Number(item.serviceId),
           serviceName: item.serviceName,
           link: item.link,
@@ -224,6 +229,54 @@ export default function AdminOrdersPage() {
     }
   }
 
+  const handleRefill = async (orderIds: string[], isBulk = false) => {
+    if (!token || orderIds.length === 0) return
+
+    if (isBulk) setBulkRefilling(true)
+    setPendingIds((prev) => {
+      const next = new Set(prev)
+      orderIds.forEach((id) => next.add(id))
+      return next
+    })
+
+    try {
+      const endpoint = orderIds.length > 1 ? 
+        `${API_BASE_URL}/requestMultipleRefills` :
+        `${API_BASE_URL}/requestRefill`
+
+      const body = orderIds.length > 1 ? { orderIds } : { orderId: orderIds[0] }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          token,
+        },
+        body: JSON.stringify(body),
+      })
+
+      const data = await response.json()
+      const success = response.ok && (String(data?.status).toLowerCase() === "success" || data?.success === true)
+
+      if (success) {
+        const successMessage = data?.message || `${orderIds.length} refill request${orderIds.length > 1 ? "s" : ""} sent.`
+        toast({ title: "Refill requested", description: successMessage })
+      } else {
+        const message = data?.message || "Unable to request refill"
+        toast({ title: "Refill failed", description: message })
+      }
+    } catch (err) {
+      toast({ title: "Network error", description: "Could not reach the server. Please try again." })
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        orderIds.forEach((id) => next.delete(id))
+        return next
+      })
+      if (isBulk) setBulkRefilling(false)
+    }
+  }
+
   const formatDate = (value?: string) => {
     if (!value) return "—"
     const date = new Date(value)
@@ -285,6 +338,17 @@ export default function AdminOrdersPage() {
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            disabled={selectedIds.size === 0 || bulkRefilling}
+            onClick={() => handleRefill(Array.from(selectedIds), true)}
+            className="w-full sm:w-auto"
+          >
+            {bulkRefilling ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+            <span>Refill</span>
+            <span className="ml-1">({selectedIds.size})</span>
+          </Button>
+
           <Button
             variant="destructive"
             disabled={selectedIds.size === 0 || bulkCancelling}
@@ -435,16 +499,33 @@ export default function AdminOrdersPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleCancel([order._id])}
-                          disabled={isPending}
-                          aria-label={`Cancel order ${order._id}`}
-                          className="h-8 w-8"
-                        >
-                          {isPending ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {order.refill ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRefill([order._id])}
+                              disabled={isPending}
+                              aria-label={`Refill order ${order._id}`}
+                              className="h-8 w-8"
+                            >
+                              {isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                            </Button>
+                          ) : null}
+
+                          {order.cancel ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleCancel([order._id])}
+                              disabled={isPending}
+                              aria-label={`Cancel order ${order._id}`}
+                              className="h-8 w-8"
+                            >
+                              {isPending ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}
+                            </Button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -483,7 +564,7 @@ export default function AdminOrdersPage() {
                     isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   }`}
                 >
-                  {/* Top row: Order ID with checkbox and delete button */}
+                  {/* Top row: Order ID with checkbox and action buttons */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2 flex-1 min-w-0">
                       <Checkbox
@@ -502,16 +583,33 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleCancel([order._id])}
-                      disabled={isPending}
-                      aria-label={`Cancel order ${order._id}`}
-                      className="h-8 w-8 flex-shrink-0"
-                    >
-                      {isPending ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}
-                    </Button>
+                    <div className="flex gap-2 items-start">
+                      {order.refill ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRefill([order._id])}
+                          disabled={isPending}
+                          aria-label={`Refill order ${order._id}`}
+                          className="h-8 w-8 flex-shrink-0"
+                        >
+                          {isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                        </Button>
+                      ) : null}
+
+                      {order.cancel ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleCancel([order._id])}
+                          disabled={isPending}
+                          aria-label={`Cancel order ${order._id}`}
+                          className="h-8 w-8 flex-shrink-0"
+                        >
+                          {isPending ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
 
                   {/* Customer and Service Info */}
