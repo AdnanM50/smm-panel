@@ -15,7 +15,6 @@ import {
 import {
   Home,
   Users,
-  Layers,
   List as ListIcon,
   LifeBuoy,
   X
@@ -27,7 +26,6 @@ export default function AdminSidebar() {
   const menu = [
     { href: "/admin-dashboard", label: "Dashboard", Icon: Home },
     { href: "/admin-dashboard/users", label: "Users", Icon: Users },
-    // { href: "/admin-dashboard/services", label: "Services", Icon: Layers },
     { href: "/admin-dashboard/admin-orders", label: "Orders", Icon: ListIcon },
     { href: "/admin-dashboard/tickets", label: "Support", Icon: LifeBuoy },
   ];
@@ -37,7 +35,6 @@ export default function AdminSidebar() {
 
       <SidebarContent>
         <div className="relative h-full">
-          {/* Mobile-only close button (top-right) */}
           <button
             type="button"
             aria-label="Close sidebar"
@@ -67,8 +64,6 @@ export default function AdminSidebar() {
 
       <SidebarFooter>
         <div className="px-2 py-3">
-         
-
           <div className="mt-2">
             <SidebarTrigger />
           </div>
