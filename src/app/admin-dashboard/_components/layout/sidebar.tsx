@@ -27,6 +27,9 @@ export default function AdminSidebar() {
     { href: "/admin-dashboard", label: "Dashboard", Icon: Home },
     { href: "/admin-dashboard/users", label: "Users", Icon: Users },
     { href: "/admin-dashboard/admin-orders", label: "Orders", Icon: ListIcon },
+    {
+      href: "/admin-dashboard/refill", label: "Refill Requests", Icon: ListIcon
+    },
     { href: "/admin-dashboard/tickets", label: "Support", Icon: LifeBuoy },
   ];
   return (
