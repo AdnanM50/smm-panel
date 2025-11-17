@@ -19,7 +19,7 @@ const navigationItems = [
   { title: "Orders", url: "/dashboard/orders", icon: ClipboardList },
   { title: "Mass order", url: "/dashboard/mass-order", icon: FileStack },
   { title: "Add funds", url: "/dashboard/add-funds", icon: Wallet },
-  { title: "Tickets", url: "/dashboard/tickets", icon: Ticket, badge: "1" },
+  { title: "Tickets", url: "/dashboard/tickets", icon: Ticket},
 ]
 
 interface SidebarContentProps {
@@ -101,14 +101,7 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
                   }}
                 />
                 <span>{item.title}</span>
-                {item.badge && (
-                  <span
-                    className="ml-auto text-white text-xs px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: "var(--dashboard-orange)" }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+              
               </Link>
             </li>
           ))}
