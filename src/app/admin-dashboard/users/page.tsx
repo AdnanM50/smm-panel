@@ -12,8 +12,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toster"
-import { Trash2 } from "lucide-react"
+import { Trash2, Eye, EyeOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
 
 const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
 
@@ -37,6 +44,14 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [newUsername, setNewUsername] = useState("")
+  const [newEmail, setNewEmail] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [newRole, setNewRole] = useState("user")
+  const [showPassword, setShowPassword] = useState(false)
+  const [adding, setAdding] = useState(false)
   const { toast } = useToast()
   const [searchEmail, setSearchEmail] = useState("")
   const [page, setPage] = useState(1)
@@ -175,6 +190,76 @@ export default function AdminUsersPage() {
     }
   }
 
+  // Change role handler (optimistic UI)
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    if (!token) {
+      toast({ title: "Not authorized", description: "Missing token", variant: "destructive" })
+      return
+    }
+
+    // Optimistic update
+    const prev = users
+    setUsers((u) => (u ? u.map((x) => (x._id === userId ? { ...x, role: newRole } : x)) : u))
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/profileUpdate/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", token },
+        body: JSON.stringify({ role: newRole }),
+      })
+      const data = await res.json()
+      if (res.ok && (data.status === "Success" || data.success)) {
+        toast({ title: "Role updated", description: `Role changed to ${newRole}` })
+      } else {
+        throw new Error(data?.message || "Update failed")
+      }
+    } catch (err: any) {
+      console.error("update role error", err)
+      toast({ title: "Could not update role", description: String(err), variant: "destructive" })
+      // revert
+      setUsers(prev)
+    }
+  }
+
+  const handleAddUser = async () => {
+    if (!newEmail || !newPassword || !newName || !newUsername) {
+      toast({ title: "Invalid input", description: "Please fill all fields", variant: "destructive" })
+      return
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Weak password", description: "Password must be at least 6 characters", variant: "destructive" })
+      return
+    }
+
+    setAdding(true)
+    try {
+      const body = { email: newEmail, username: newUsername, name: newName, password: newPassword, role: newRole }
+      const res = await fetch(`${API_BASE_URL}/registration`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { token } : {}) },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (res.ok && (data.status === "Success" || data.success)) {
+        toast({ title: "User created", description: data.message || "User successfully registered" })
+        setAddOpen(false)
+        setNewName("")
+        setNewUsername("")
+        setNewEmail("")
+        setNewPassword("")
+        setNewRole("user")
+        fetchUsers()
+      } else {
+        toast({ title: "Create failed", description: data?.message || data?.msg || "Could not create user", variant: "destructive" })
+      }
+    } catch (err: any) {
+      console.error("add user error", err)
+      toast({ title: "Network error", description: String(err) || "Network error", variant: "destructive" })
+    } finally {
+      setAdding(false)
+    }
+  }
+
   return (
     <div className="w-full min-h-screen space-y-4 sm:space-y-6">
       {/* Header Section */}
@@ -193,6 +278,11 @@ export default function AdminUsersPage() {
             className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
           />
         </div>
+          <div className="flex items-center justify-end pt-3">
+            <Button onClick={() => setAddOpen(true)} className="bg-green-600 hover:bg-green-700 text-white">
+              Add User
+            </Button>
+          </div>
       </div>
 
       {/* Content Section */}
@@ -233,9 +323,33 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm">
-                        <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs">
-                          {u.role || "user"}
-                        </span>
+                        <Select value={u.role || "user"} onValueChange={(val) => handleRoleChange(u._id, val)}>
+                            <SelectTrigger
+                              size="sm"
+                              className="w-[7.5rem] border border-gray-200 dark:border-gray-700 rounded-md bg-gradient-to-b from-white/50 to-transparent dark:from-gray-800/40 dark:to-transparent px-2 py-1 shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                            >
+                              <SelectValue>
+                                <div className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-300/90" />
+                                  <span className="text-xs font-medium text-blue-800 dark:text-blue-200">{u.role || "user"}</span>
+                                </div>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent className="border border-gray-200 dark:border-gray-700 shadow-lg">
+                              <SelectItem value="user" className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                <span>User</span>
+                              </SelectItem>
+                              <SelectItem value="agent" className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                                <span>Agent</span>
+                              </SelectItem>
+                              <SelectItem value="admin" className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-rose-500" />
+                                <span>Admin</span>
+                              </SelectItem>
+                            </SelectContent>
+                        </Select>
                       </td>
                       <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium">
                         {typeof u.balance === "number" ? `$${u.balance.toFixed(2)}` : "—"}
@@ -285,9 +399,24 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-3 py-3 text-xs truncate">{u.name || "—"}</td>
                       <td className="px-3 py-3 text-xs">
-                        <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs">
-                          {u.role || "user"}
-                        </span>
+                        <Select value={u.role || "user"} onValueChange={(val) => handleRoleChange(u._id, val)}>
+                          <SelectTrigger
+                            size="sm"
+                            className="w-[6.5rem] border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                          >
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-300/90" />
+                                <span className="text-xs font-medium text-blue-800 dark:text-blue-200">{u.role || "user"}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="border border-gray-200 dark:border-gray-700 shadow-lg">
+                            <SelectItem value="user" className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-500" />User</SelectItem>
+                            <SelectItem value="agent" className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-indigo-500" />Agent</SelectItem>
+                            <SelectItem value="admin" className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-rose-500" />Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="px-3 py-3 text-xs font-medium">
                         {typeof u.balance === "number" ? `$${u.balance.toFixed(2)}` : "—"}
@@ -348,9 +477,24 @@ export default function AdminUsersPage() {
                         Role
                       </p>
                       <div className="mt-0.5">
-                        <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs font-medium">
-                          {u.role || "user"}
-                        </span>
+                        <Select value={u.role || "user"} onValueChange={(val) => handleRoleChange(u._id, val)}>
+                          <SelectTrigger
+                            size="sm"
+                            className="w-full border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                          >
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-300/90" />
+                                <span className="text-xs font-medium text-blue-800 dark:text-blue-200">{u.role || "user"}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="border border-gray-200 dark:border-gray-700 shadow-lg">
+                            <SelectItem value="user" className="flex items-center gap-2"> <span className="h-2 w-2 rounded-full bg-blue-500" />User</SelectItem>
+                            <SelectItem value="agent" className="flex items-center gap-2"> <span className="h-2 w-2 rounded-full bg-indigo-500" />Agent</SelectItem>
+                            <SelectItem value="admin" className="flex items-center gap-2"> <span className="h-2 w-2 rounded-full bg-rose-500" />Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
@@ -490,6 +634,53 @@ export default function AdminUsersPage() {
           </>
         )}
       </div>
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="w-[90vw] sm:w-[480px] mx-auto">
+          <DialogHeader>
+            <DialogTitle>Add new user</DialogTitle>
+            <DialogDescription>Provide details to create a new user account.</DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 gap-3 mt-3">
+            <label className="text-xs text-gray-600">Name</label>
+            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Full name" />
+            <label className="text-xs text-gray-600">Username</label>
+            <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="Username" />
+            <label className="text-xs text-gray-600">Email</label>
+            <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Email address" />
+            <label className="text-xs text-gray-600">Password</label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <label className="text-xs text-gray-600">Role</label>
+            <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full rounded border px-2 py-1 bg-white dark:bg-gray-800">
+              <option value="user">User</option>
+              <option value="agent">Agent</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setAddOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleAddUser} className="w-full sm:w-auto" disabled={adding}>{adding ? 'Creating...' : 'Create user'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="w-[90vw] sm:w-full mx-auto">
           <DialogHeader>

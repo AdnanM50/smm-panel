@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
@@ -16,6 +16,15 @@ interface Props {
 export default function AdminDashboardLayout({ children }: Props) {
   const router = useRouter()
   const { user, isLoading, isAuthenticated } = useAuth()
+  const pathname = usePathname()
+
+  const agentAllowedRoutes = [
+    "/admin-dashboard/admin-orders",
+    "/admin-dashboard/refill",
+    "/admin-dashboard/tickets",
+  ]
+
+  const isAgentRouteAllowed = agentAllowedRoutes.some((route) => pathname?.startsWith(route));
 
   useEffect(() => {
     if (isLoading) return
@@ -24,11 +33,23 @@ export default function AdminDashboardLayout({ children }: Props) {
       router.push('/')
       return
     }
-    if (user?.role !== 'admin') {
-      if (user?.role === 'user') router.push('/dashboard')
-      else router.push('/')
+    if (user?.role === 'admin') {
+      return
     }
-  }, [isLoading, isAuthenticated, user, router])
+
+    if (user?.role === 'agent') {
+      if (!isAgentRouteAllowed) {
+        router.replace('/admin-dashboard/admin-orders')
+      }
+      return
+    }
+
+    if (user?.role === 'user') {
+      router.push('/dashboard')
+    } else {
+      router.push('/')
+    }
+  }, [isLoading, isAuthenticated, user, router, pathname, isAgentRouteAllowed])
   
   return (
     <ThemeProvider>

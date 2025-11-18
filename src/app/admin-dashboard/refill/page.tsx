@@ -177,7 +177,6 @@ export default function AdminRefillPage() {
       const updates = Array.isArray(data?.refills) ? data.refills : Array.isArray(data?.data) ? data.data : []
       updateStatusesFromArray(updates)
       toast({ title: "Refill statuses updated", description: `${ids.length} refill(s) checked` })
-      // clear selection for ones updated
       setSelectedIds((prev) => {
         const next = new Set(prev)
         ids.forEach((id) => next.delete(id))

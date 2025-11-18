@@ -16,18 +16,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AddFunds() {
-  const { updateProfile, user } = useAuth();
+  const { user, token } = useAuth();
   
   const paymentOptions: Record<string, { label: string; description: string }> = {
-    binance: {
-      label: "Binance Pay",
-      description:
-        "Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%",
-    },
-    paypal: {
-      label: "PayPal",
-      description: "Secure PayPal integration",
-    },
+    // binance: {
+    //   label: "Binance Pay",
+    //   description:
+    //     "Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%",
+    // },
+    // paypal: {
+    //   label: "PayPal",
+    //   description: "Secure PayPal integration",
+    // },
     stripe: {
       label: "Stripe",
       description: "Credit/Debit card payments",
@@ -41,7 +41,18 @@ export default function AddFunds() {
   const [paymentMethod, setPaymentMethod] = useState<string>("binance");
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [manualBalance, setManualBalance] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [currency, setCurrency] = useState<"BDT" | "USD">("BDT");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://smm-panel-khan-it.up.railway.app/api";
+  const USD_TO_BDT_RATE = 122.27;
+  const numericManualAmount = Number(manualBalance);
+  const isManualAmountValid = !Number.isNaN(numericManualAmount) && numericManualAmount > 0;
+  const amountInBdt = isManualAmountValid
+    ? currency === "USD"
+      ? numericManualAmount * USD_TO_BDT_RATE
+      : numericManualAmount
+    : 0;
+  const currentBalance = user?.balance || 0;
   const [tabValue, setTabValue] = useState<string>("add");
 
   // Transaction history state
@@ -107,38 +118,56 @@ export default function AddFunds() {
   }, [tabValue]);
 
   const handleManualBalanceUpdate = async () => {
-    if (!manualBalance || isNaN(Number(manualBalance)) || Number(manualBalance) <= 0) {
+    if (!isManualAmountValid) {
       toast.error("Invalid Amount", {
         description: "Please enter a valid positive number for the balance.",
       });
       return;
     }
 
-    setIsUpdating(true);
+    const amountForRequest = currency === "USD"
+      ? numericManualAmount * USD_TO_BDT_RATE
+      : numericManualAmount;
+
+    setIsProcessingPayment(true);
     try {
-      const currentBalance = user?.balance || 0;
-      const newBalance = currentBalance + Number(manualBalance);
-      
-      const result = await updateProfile({ balance: newBalance });
-      
-      if (result.success) {
-        toast.success("Balance Added Successfully!", {
-          description: `Your balance has been updated. New balance: $${newBalance.toFixed(2)}`,
-        });
-        setIsManualModalOpen(false);
-        setManualBalance("");
-        setPaymentMethod("binance"); // Reset to default payment method
-      } else {
-        toast.error("Update Failed", {
-          description: result.message || "Failed to update balance. Please try again.",
-        });
+      const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("auth_token") : null);
+      const response = await fetch(`${API_BASE_URL}/initiatePayment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { token: authToken } : {}),
+        },
+        body: JSON.stringify({ amount: Number(amountForRequest.toFixed(2)) }),
+      });
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.warn("initiatePayment response parse failed", jsonError);
+      }
+      if (!response.ok || !data?.payment_url) {
+        const message = data?.message || data?.error || `Server responded with ${response.status}`;
+        throw new Error(message);
+      }
+
+      toast.success("Redirecting to payment gateway", {
+        description: "You will be redirected shortly to complete the payment.",
+      });
+      setIsManualModalOpen(false);
+      setManualBalance("");
+      setPaymentMethod("binance");
+      setCurrency("BDT");
+
+      if (typeof window !== "undefined") {
+        window.location.assign(data.payment_url);
       }
     } catch (error) {
-      toast.error("Error", {
-        description: "An error occurred while updating your balance. Please try again.",
+      toast.error("Payment Failed", {
+        description: (error as Error).message || "Unable to start payment. Please try again.",
       });
     } finally {
-      setIsUpdating(false);
+      setIsProcessingPayment(false);
     }
   };
 
@@ -427,6 +456,7 @@ export default function AddFunds() {
           if (!open) {
             setManualBalance("");
             setPaymentMethod("binance"); // Reset to default payment method
+            setCurrency("BDT");
           }
         }}
       >
@@ -440,7 +470,7 @@ export default function AddFunds() {
               Enter the amount you want to add to your account balance.
             </DialogDescription>
           </DialogHeader>
-            <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
               <Label htmlFor="balance" className="text-right">
                 Amount ($)
@@ -456,14 +486,41 @@ export default function AddFunds() {
                 step="0.01"
               />
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+              <Label htmlFor="currency" className="text-right">
+                Currency
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={currency}
+                  onValueChange={(value) => setCurrency(value as "BDT" | "USD")}
+                >
+                  <SelectTrigger className="w-full min-h-[48px] py-2 px-3">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="BDT">BDT</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {isManualAmountValid && (
+              <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-sm text-muted-foreground">
+                Equivalent: <span className="font-semibold text-foreground">BDT {amountInBdt.toFixed(2)}</span>
+                {currency === "USD" && (
+                  <span className="text-xs text-muted-foreground ml-2">(1 USD = 122.27 BDT)</span>
+                )}
+              </div>
+            )}
             {user && (
               <div className="p-3 rounded-lg bg-muted/50">
                 <p className="text-sm text-muted-foreground">
-                  Current Balance: <span className="font-semibold text-foreground">${user.balance?.toFixed(2) || '0.00'}</span>
+                  Current Balance: <span className="font-semibold text-foreground">${currentBalance.toFixed(2)}</span>
                 </p>
-                {manualBalance && !isNaN(Number(manualBalance)) && Number(manualBalance) > 0 && (
+                {isManualAmountValid && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    New Balance: <span className="font-semibold text-success">${(user.balance + Number(manualBalance)).toFixed(2)}</span>
+                    New Balance: <span className="font-semibold text-success">${(currentBalance + numericManualAmount).toFixed(2)}</span>
                   </p>
                 )}
               </div>
@@ -477,21 +534,22 @@ export default function AddFunds() {
                 setIsManualModalOpen(false);
                 setManualBalance("");
                 setPaymentMethod("binance"); // Reset to default payment method
+                setCurrency("BDT");
               }}
-              disabled={isUpdating}
+              disabled={isProcessingPayment}
             >
               Cancel
             </Button>
             <Button
               type="button"
               onClick={handleManualBalanceUpdate}
-              disabled={isUpdating || !manualBalance || isNaN(Number(manualBalance)) || Number(manualBalance) <= 0}
+              disabled={isProcessingPayment || !isManualAmountValid}
               className="bg-gradient-primary"
             >
-              {isUpdating ? (
+              {isProcessingPayment ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Adding Balance...
+                  Initiating Payment...
                 </>
               ) : (
                 <>

@@ -48,6 +48,7 @@ export default function LoginPage() {
           const profile = await fetchProfileDetails()
           const role = profile?.user?.role || user?.role
           if (role === 'admin') router.push('/admin-dashboard')
+          else if (role === 'agent') router.push('/admin-dashboard/admin-orders')
           else router.push('/dashboard')
         } catch (err) {
           // Fallback to dashboard if anything goes wrong
@@ -66,8 +67,8 @@ export default function LoginPage() {
   // Redirect already authenticated users away from login page (role-aware)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      // Prefer authoritative value from `user` if available
       if (user?.role === 'admin') router.replace('/admin-dashboard')
+      else if (user?.role === 'agent') router.replace('/admin-dashboard/admin-orders')
       else router.replace('/dashboard')
     }
   }, [isLoading, isAuthenticated, user, router])

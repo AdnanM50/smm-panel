@@ -20,10 +20,12 @@ import {
   X,
   Refrigerator
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 
 export default function AdminSidebar() {
   const { toggleSidebar } = useSidebar();
+  const { user } = useAuth();
   const menu = [
     { href: "/admin-dashboard", label: "Dashboard", Icon: Home },
     { href: "/admin-dashboard/users", label: "Users", Icon: Users },
@@ -51,7 +53,7 @@ export default function AdminSidebar() {
 
           <nav aria-label="Admin navigation" className="px-2 mt-5 md:mt-20 py-2">
           <SidebarMenu>
-            {menu.map((item) => (
+            {(user?.role === "agent" ? menu.slice(-3) : menu).map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton asChild>
                   <Link href={item.href} className="flex items-center gap-2 w-full">
