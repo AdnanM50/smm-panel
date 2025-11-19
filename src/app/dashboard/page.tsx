@@ -120,17 +120,29 @@ const totalSpent = user?.totalSpent ?? 0
 
     setIsSearching(true)
     try {
-      // Attempt a gradual fetch with early exit when we've collected enough results
+      // Attempt a gradual fetch with early exit when we've collected enough results.
+      // When the user is searching by numeric service ID (e.g. "3800"), scan
+      // more pages to increase the chance of finding that specific ID.
       const limit = 100
+      const isIdSearch = !!opts.query && /^\d+$/.test((opts.query || '').trim())
+      const maxPages = isIdSearch ? 30 : 6
       let page = 1
       let all: ApiServiceItem[] = []
-      while (page <= 6) {
+      while (page <= maxPages) {
         const res = await fetchServicesFromApi({ profit: 10, page, limit, token: token || undefined })
         if (ac.signal.aborted) break
         all.push(...res)
+        // If this page returned fewer than `limit` items, upstream has no more pages
         if (res.length < limit) break
-        // small early exit: if searching by query and we already have 200 candidates, stop
-        if (opts.query && all.length >= 200) break
+
+        // If searching by numeric ID, stop early when we find the ID on any fetched page
+        if (isIdSearch) {
+          const idToFind = Number((opts.query || '').trim())
+          if (res.some(s => s.service === idToFind)) break
+        }
+
+        // small early exit for non-ID queries: if we've already collected enough candidates, stop
+        if (opts.query && all.length >= 200 && !isIdSearch) break
         page++
       }
 

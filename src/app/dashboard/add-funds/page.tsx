@@ -79,7 +79,6 @@ export default function AddFunds() {
     if (paymentMethod === "manual") {
       setIsManualModalOpen(true);
     } else {
-      // Handle other payment methods
       console.log("Proceeding with payment method:", paymentMethod);
     }
   };

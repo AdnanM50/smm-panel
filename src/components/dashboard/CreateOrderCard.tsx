@@ -131,10 +131,8 @@ export default function CreateOrderCard({
     return Number.isFinite(n) && !Number.isNaN(n) ? n : 0
   })()
 
-  // Determine rate: userRate if present, otherwise default rate, otherwise 0
   const rate = selectedService ? (selectedService.userRate ?? selectedService?.userRate ?? 0) : 0
 
-  // Compute total charge as userRate * quantity (as requested)
   const computedTotal = rate * parsedQuantity
 
   return (
