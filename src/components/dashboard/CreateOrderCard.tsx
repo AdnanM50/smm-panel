@@ -74,7 +74,6 @@ export default function CreateOrderCard({
   quantity,
   setQuantity,
   quantityError,
-  totalCharge, // left available if parent uses it elsewhere
   handleSubmitOrder,
   isSubmitting,
   validateLink,

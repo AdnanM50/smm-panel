@@ -19,15 +19,15 @@ export default function AddFunds() {
   const { user, token } = useAuth();
   
   const paymentOptions: Record<string, { label: string; description: string }> = {
-    // binance: {
-    //   label: "Binance Pay",
-    //   description:
-    //     "Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%",
-    // },
-    // paypal: {
-    //   label: "PayPal",
-    //   description: "Secure PayPal integration",
-    // },
+    binance: {
+      label: "Binance Pay",
+      description:
+        "Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%",
+    },
+    paypal: {
+      label: "PayPal",
+      description: "Secure PayPal integration",
+    },
     stripe: {
       label: "Stripe",
       description: "Credit/Debit card payments",
@@ -55,7 +55,6 @@ export default function AddFunds() {
   const currentBalance = user?.balance || 0;
   const [tabValue, setTabValue] = useState<string>("add");
 
-  // Transaction history state
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Array<{
@@ -116,6 +115,53 @@ export default function AddFunds() {
       fetchTransactionHistory();
     }
   }, [tabValue]);
+
+  // When the payment gateway redirects back it may include a `transactionId` query param.
+  // If present, call the verifyPayment endpoint to confirm and credit the user's account.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const txId = params.get('transactionId') || params.get('transaction_id');
+      if (!txId) return;
+
+      // Prevent duplicate calls on re-render or navigation
+      if ((window as any).__smm_verify_tx_called === txId) return;
+      (window as any).__smm_verify_tx_called = txId;
+
+      (async () => {
+        const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null);
+        try {
+          const res = await fetch(`${API_BASE_URL}/verifyPayment?transactionId=${encodeURIComponent(txId)}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(authToken ? { token: String(authToken) } : {}),
+            },
+          });
+          let data: any = null;
+          try {
+            data = await res.json();
+          } catch (e) {
+            console.warn('verifyPayment parse failed', e);
+          }
+
+          if (res.ok && (data?.status === 'Success' || data?.success || data?.status === 'success')) {
+            toast.success('Payment verified', { description: data?.message || 'Your payment was successful and your balance has been updated.' });
+            // Refresh transaction history if user is on history tab
+            fetchTransactionHistory();
+          } else {
+            const msg = data?.message || data?.error || `Verification failed (${res.status})`;
+            toast.error('Payment verification failed', { description: msg });
+          }
+        } catch (error) {
+          toast.error('Network error verifying payment', { description: (error as Error).message || 'Please try again later.' });
+        }
+      })();
+    } catch (e) {
+      console.warn('Failed to run post-payment verify effect', e);
+    }
+  }, []);
 
   const handleManualBalanceUpdate = async () => {
     if (!isManualAmountValid) {
@@ -533,7 +579,7 @@ export default function AddFunds() {
               onClick={() => {
                 setIsManualModalOpen(false);
                 setManualBalance("");
-                setPaymentMethod("binance"); // Reset to default payment method
+                setPaymentMethod("binance");
                 setCurrency("BDT");
               }}
               disabled={isProcessingPayment}
