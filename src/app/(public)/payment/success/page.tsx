@@ -74,23 +74,8 @@ export default function Page() {
 		};
 	}, [transactionId]);
 
-	const title = useMemo(() => {
-		switch (status) {
-			case "loading":
-				return "Verifying payment";
-			case "success":
-				return "Payment confirmed";
-			case "error":
-				return "Verification failed";
-			default:
-				return "Payment status";
-		}
-	}, [status]);
-
-	const description = message || (status === "loading" ? "Contacting the gateway..." : "");
-	const iconStatus: Parameters<typeof PaymentStatusIcon>[0]["status"] = useMemo(() => {
-		return status === "error" ? "failed" : "success";
-	}, [status]);
+	const description = message || (status === "loading" ? "Contacting the gateway..." : "Thanks — your payment went through.");
+	const iconStatus: Parameters<typeof PaymentStatusIcon>[0]["status"] = "success";
 
 	return (
 		<main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 sm:p-6 p-2">
@@ -100,24 +85,15 @@ export default function Page() {
 				</div>
 				<div className="space-y-2 text-center">
 					<p className="text-xs font-semibold tracking-[0.4em] uppercase text-muted-foreground">payment success</p>
-					<h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
-					<p className="text-sm text-slate-600 dark:text-slate-300">
+					<h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Payment Successful</h1>
+					<p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
 						Transaction ID: <span className="font-mono text-foreground">{transactionId ?? "missing"}</span>
 					</p>
-				</div>
-				<div className="rounded-2xl border border-border/60 p-6 text-center w-full">
-					{status === "loading" && (
-						<p className="text-sm text-muted-foreground">Please wait while we verify the payment.</p>
-					)}
-					{status === "success" && <p className="text-base text-success">{description || "Your balance has been updated."}</p>}
-					{status === "error" && <p className="text-base text-destructive">{description || "Something went wrong."}</p>}
+					<p className="text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
+						{status === "loading" ? "Please wait — we are verifying your transaction." : description}
+					</p>
 				</div>
 				<div className="space-y-2 text-center w-full">
-					{status === "error" && (
-						<p className="text-sm text-muted-foreground">
-							If the issue persists, contact support or try adding funds again.
-						</p>
-					)}
 					<div className="flex flex-wrap justify-center gap-3 pt-4">
 						<Link
 							href="/dashboard"
