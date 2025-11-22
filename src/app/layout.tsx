@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react"
+import { Suspense } from "react";
 
 import "./globals.css";
 // import { ThemeProvider } from "@/context/theme-provider";
@@ -20,14 +20,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans">
-        {/* <Suspense fallback={null}> */}
+        <Suspense fallback={null}>
           <AuthProvider>
             {/* <ThemeProvider> */}
               {children}
               <Toaster />
             {/* </ThemeProvider> */}
           </AuthProvider>
-        {/* </Suspense> */}
+        </Suspense>
       </body>
     </html>
   );
