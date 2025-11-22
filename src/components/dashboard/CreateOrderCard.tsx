@@ -124,7 +124,6 @@ export default function CreateOrderCard({
     </>
   )
 
-  // Safely parse quantity to a number (fallback to 0)
   const parsedQuantity = (() => {
     if (!quantity) return 0
     const n = Number(quantity)
@@ -327,10 +326,7 @@ export default function CreateOrderCard({
                 placeholder="Enter quantity"
                 value={quantity}
                 onChange={(e) => {
-                  // keep input as string to allow partial edits (e.g. "")
                   const val = e.target.value
-                  // optionally you can restrict to integers only:
-                  // const normalized = val.replace(/\D+/g, '')
                   setQuantity(val)
                   validateQuantity(val, selectedService)
                 }}
