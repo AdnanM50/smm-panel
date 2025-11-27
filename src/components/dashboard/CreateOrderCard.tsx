@@ -74,6 +74,7 @@ export default function CreateOrderCard({
   quantity,
   setQuantity,
   quantityError,
+  totalCharge,
   handleSubmitOrder,
   isSubmitting,
   validateLink,
@@ -130,9 +131,10 @@ export default function CreateOrderCard({
     return Number.isFinite(n) && !Number.isNaN(n) ? n : 0
   })()
 
-  const rate = selectedService ? (selectedService.userRate ?? selectedService?.userRate ?? 0) : 0
+  const rate = selectedService ? (selectedService.userRate ?? 0) : 0
 
-  const computedTotal = rate * parsedQuantity
+  // API rates are per 1000 units — convert to per-unit price and compute total
+  const computedTotal = totalCharge ?? (rate / 1000) * parsedQuantity
 
   return (
     <Card className="w-full" style={{ backgroundColor: 'var(--dashboard-bg-card)' }}>
@@ -217,15 +219,15 @@ export default function CreateOrderCard({
                 <div className="flex items-center justify-between"><h3 className="text-lg font-semibold" style={{ color: 'var(--dashboard-text-primary)' }}>{selectedPlatform} Services</h3></div>
                 <div className="max-h-80 overflow-y-auto border rounded-lg bg-background">
                   {selectedService ? (
-                    <div key={selectedService.service} onClick={() => setSelectedService(selectedService)} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors">
-                      <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{selectedService.service} - {selectedService.name}</div><div className="text-xs text-muted-foreground">Rate: ${selectedService.userRate || selectedService?.userRate} | Min: {selectedService.min} | Max: {selectedService.max}</div></div><div className="text-xs text-muted-foreground">{selectedService.category}</div></div>
-                    </div>
-                  ) : isSearching ? (
+                                      <div key={selectedService.service} onClick={() => setSelectedService(selectedService)} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors">
+                                        <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{selectedService.service} - {selectedService.name}</div><div className="text-xs text-muted-foreground">Rate: ${selectedService.userRate || selectedService?.userRate} (per 1000) | Min: {selectedService.min} | Max: {selectedService.max}</div></div><div className="text-xs text-muted-foreground">{selectedService.category}</div></div>
+                                      </div>
+                                    ) : isSearching ? (
                     <div className="space-y-2 p-2">{[...Array(5)].map((_, i) => <div key={i} className="p-3 border-b last:border-b-0"><div className="flex items-center justify-between"><div className="flex-1 space-y-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/2" /></div><Skeleton className="h-3 w-16" /></div></div>)}</div>
                   ) : services.length > 0 ? (
                     services.map((service) => (
                       <div key={service.service} onClick={() => { setSelectedService(service); setSearchQuery(service.name); setServices([]) }} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors">
-                        <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service?.userRate} | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
+                        <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service?.userRate} (per 1000) | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
                       </div>
                     ))
                   ) : (<div className="p-6 text-center text-muted-foreground">No {selectedPlatform} services found</div>)}
@@ -237,7 +239,7 @@ export default function CreateOrderCard({
               <div className="max-h-60 overflow-y-auto border rounded-lg bg-background">
                 {services.map((service) => (
                     <div key={service.service} onClick={() => { setSelectedService(service); setSearchQuery(service.name); setServices([]) }} className="p-3 hover:bg-muted cursor-pointer border-b last:border-b-0">
-                    <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service?.userRate} | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
+                    <div className="flex items-center justify-between"><div className="flex-1"><div className="font-medium text-sm">{service.service} - {service.name}</div><div className="text-xs text-muted-foreground">Rate: ${service.userRate || service?.userRate} (per 1000) | Min: {service.min} | Max: {service.max}</div></div><div className="text-xs text-muted-foreground">{service.category}</div></div>
                   </div>
                 ))}
               </div>

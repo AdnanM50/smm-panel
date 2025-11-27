@@ -322,7 +322,7 @@ const totalSpent = user?.totalSpent ?? 0
     if (!validateLink(link)) return
     setIsSubmitting(true)
     try {
-  const orderData: PlaceOrderRequest = { serviceId: selectedService.service, link: link.trim(), profit: selectedService.userRate ?? 0, quantity: qty }
+  const orderData: PlaceOrderRequest = { serviceId: selectedService.service, link: link.trim(), profit: totalCharge, quantity: qty }
       const result = await placeNewOrder(orderData, token)
       if (result.success) {
         toast.success("Order placed successfully!", { description: `Order ID: ${result.order.apiOrderId}` })
