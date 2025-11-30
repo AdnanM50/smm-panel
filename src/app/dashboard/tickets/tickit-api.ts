@@ -32,6 +32,12 @@ export interface GetMyTicketsResponse {
   message?: string
 }
 
+export interface ReplyToTicketResponse {
+  success: boolean
+  message?: string
+  data?: any
+}
+
 /**
  * Create a ticket for a user's order. This will:
  * - fetch the user's orders using the provided token
@@ -98,5 +104,29 @@ export async function getMyTickets(token: string): Promise<GetMyTicketsResponse>
   } catch (error: any) {
     console.error('getMyTickets error:', error)
     return { success: false, tickets: [], message: error?.message || 'Network error' }
+  }
+}
+
+export async function replyToTicket(ticketId: string, message: string, token: string): Promise<ReplyToTicketResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/replyToTicket/${ticketId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        token,
+      },
+      body: JSON.stringify({ message }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      return { success: false, message: data?.message || `Failed (${res.status})`, data }
+    }
+
+    return { success: data?.success !== false, message: data?.message, data }
+  } catch (error: any) {
+    console.error('replyToTicket error:', error)
+    return { success: false, message: error?.message || 'Network error while replying' }
   }
 }

@@ -1,15 +1,22 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Headphones, Paperclip } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Headphones, Eye } from "lucide-react";
 import { useAuth } from '@/context/AuthContext'
-import { createTicket } from './tickit-api'
-import { getMyTickets, Ticket as ApiTicket } from './tickit-api'
-import { useEffect } from 'react'
+import { createTicket, getMyTickets, replyToTicket } from './tickit-api'
+import { useToast } from '@/hooks/use-toster'
 
 
 export default function Tickets() {
@@ -23,12 +30,17 @@ export default function Tickets() {
     status: string
     createdAt?: string
     raw?: any
+    replies?: any[]
   }
 
   const [apiTickets, setApiTickets] = useState<DisplayTicket[] | null>(null)
   const [rawResponse, setRawResponse] = useState<any | null>(null)
+  const [selectedTicket, setSelectedTicket] = useState<DisplayTicket | null>(null)
+  const [replyDraft, setReplyDraft] = useState<string>('')
+  const [isReplying, setIsReplying] = useState(false)
 
   const { token } = useAuth()
+  const { toast } = useToast()
   useEffect(() => {
     let mounted = true
 
@@ -61,6 +73,11 @@ export default function Tickets() {
             subject: t.subject ?? t.title ?? 'No subject',
             status: t.status ?? t.state ?? 'open',
             createdAt: t.createdAt ?? t.created_at ?? t.date,
+            replies: Array.isArray(t.replies)
+              ? t.replies
+              : Array.isArray(t.data?.replies)
+              ? t.data.replies
+              : [],
             raw: t,
           } as DisplayTicket))
 
@@ -110,6 +127,11 @@ export default function Tickets() {
           subject: t.subject ?? t.title ?? 'No subject',
           status: t.status ?? t.state ?? 'open',
           createdAt: t.createdAt ?? t.created_at ?? t.date,
+          replies: Array.isArray(t.replies)
+            ? t.replies
+            : Array.isArray(t.data?.replies)
+            ? t.data.replies
+            : [],
           raw: t,
         } as DisplayTicket))
 
@@ -122,6 +144,99 @@ export default function Tickets() {
     } catch (err) {
       console.error(err)
       setStatusMessage('Network error while fetching tickets')
+    }
+  }
+
+  const getTicketReplies = (ticket: DisplayTicket | null) => {
+    if (!ticket) return []
+    if (Array.isArray(ticket.replies) && ticket.replies.length > 0) return ticket.replies
+    if (Array.isArray(ticket.raw?.replies) && ticket.raw.replies.length > 0) return ticket.raw.replies
+    if (Array.isArray(ticket.raw?.data?.replies) && ticket.raw.data.replies.length > 0) return ticket.raw.data.replies
+    return []
+  }
+
+  const formatReplySender = (reply: any) => {
+    const sender = reply?.sender ?? reply?.from ?? reply?.author ?? reply?.user
+    if (!sender) return 'Unknown'
+    return String(sender)
+  }
+
+  const formatReplyDate = (value?: string) => {
+    if (!value) return '—'
+    try {
+      return new Date(value).toLocaleString()
+    } catch {
+      return value
+    }
+  }
+
+  const formatTicketDate = (value?: string) => {
+    if (!value) return '—'
+    try {
+      const date = new Date(value)
+      const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }
+      return date.toLocaleString(undefined, options)
+    } catch {
+      return value
+    }
+  }
+
+  const openReplyModal = (ticket: DisplayTicket) => {
+    setSelectedTicket(ticket)
+    setReplyDraft('')
+  }
+
+  const closeReplyModal = () => {
+    setSelectedTicket(null)
+    setReplyDraft('')
+  }
+
+  const handleReplySubmit = async () => {
+    if (!selectedTicket) return
+    if (!token) {
+      setStatusMessage('You must be logged in to reply to a ticket')
+      return
+    }
+
+    const message = replyDraft.trim()
+    if (!message) {
+      setStatusMessage('Please enter a reply message')
+      return
+    }
+
+    setIsReplying(true)
+    setStatusMessage(null)
+
+    try {
+      const replyResult = await replyToTicket(selectedTicket.id, message, token)
+
+      if (!replyResult.success) {
+        throw new Error(replyResult.message || 'Unable to send reply')
+      }
+
+      toast({
+        title: 'Reply sent',
+        description: replyResult.message || 'Your response was recorded',
+      })
+
+      await refreshTickets()
+      closeReplyModal()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send reply'
+      setStatusMessage(message)
+      toast({
+        title: 'Reply failed',
+        description: message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsReplying(false)
     }
   }
 
@@ -205,6 +320,10 @@ export default function Tickets() {
 
                   if (res.success) {
                     setStatusMessage('Ticket submitted successfully')
+                    toast({
+                      title: 'Ticket submitted',
+                      description: res.message || 'We received your request and will follow up soon.',
+                    })
                     // clear fields
                     setSubject('')
                     setOrderApiId('')
@@ -218,10 +337,20 @@ export default function Tickets() {
                     }
                   } else {
                     setStatusMessage(res.message || 'Failed to submit ticket')
+                    toast({
+                      title: 'Ticket submission failed',
+                      description: res.message || 'Failed to submit ticket',
+                      variant: 'destructive',
+                    })
                   }
                 } catch (err) {
                   console.error(err)
                   setStatusMessage('Network error while submitting ticket')
+                  toast({
+                    title: 'Ticket submission failed',
+                    description: 'Network error while submitting ticket',
+                    variant: 'destructive',
+                  })
                 } finally {
                   setLoading(false)
                 }
@@ -280,6 +409,12 @@ export default function Tickets() {
                   ? 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800 text-white'
                   : 'bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-800 text-warning'
 
+              const ticketReplies = getTicketReplies(t)
+              const hasAdminReply = ticketReplies.some((reply:any) => {
+                const sender = String(reply?.sender ?? reply?.from ?? reply?.author ?? reply?.user ?? '').toLowerCase()
+                return sender === 'admin'
+              })
+
               return (
                 <div
                   key={t.id ?? ticket._id ?? ticket.id}
@@ -298,9 +433,22 @@ export default function Tickets() {
                         <span className={`inline-block mt-2 sm:mt-1 px-2 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>{(t.status || 'open')}</span>
                       </div>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-2 sm:mt-0 sm:ml-4 sm:whitespace-nowrap">
-                      {t.createdAt}
-                    </span>
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:ml-4 sm:whitespace-nowrap">
+                      {hasAdminReply && (
+                        <button
+                          type="button"
+                          className="rounded-full p-1 text-muted-foreground transition-colors hover:text-primary"
+                          onClick={() => openReplyModal(t)}
+                          aria-label="View admin replies"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="sr-only">View admin replies</span>
+                        </button>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {formatTicketDate(t.createdAt)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )
@@ -310,6 +458,57 @@ export default function Tickets() {
 
         </Card>
       </div>
+      <Dialog open={Boolean(selectedTicket)} onOpenChange={(open) => !open && closeReplyModal()}>
+        <DialogContent className="space-y-4">
+          <DialogHeader>
+            <DialogTitle>Replies for {selectedTicket?.subject ?? 'ticket'}</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {selectedTicket ? `Ticket ID ${selectedTicket.id}` : 'Select a ticket to read replies.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {(() => {
+              const replies = getTicketReplies(selectedTicket)
+              if (replies.length === 0) {
+                return <p className="text-sm text-muted-foreground">No replies yet.</p>
+              }
+              return replies.map((reply:any, index:any) => (
+                <div
+                  key={reply?._id ?? reply?.id ?? `${selectedTicket?.id ?? 'reply'}-${index}`}
+                  className="rounded-lg border border-border/50 bg-muted/60 p-3"
+                >
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span className="font-semibold">{formatReplySender(reply)}</span>
+                    <span>{formatReplyDate(reply?.createdAt ?? reply?.created_at ?? reply?.date)}</span>
+                  </div>
+                  <p className="text-sm text-foreground whitespace-pre-line">{reply?.message ?? reply?.body ?? ''}</p>
+                </div>
+              ))
+            })()}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reply-message">Write a reply</Label>
+            <Textarea
+              id="reply-message"
+              value={replyDraft}
+              onChange={(event) => setReplyDraft(event.target.value)}
+              rows={5}
+              placeholder="Let the support team know any updates or ask for more info."
+            />
+          </div>
+
+          <DialogFooter className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={closeReplyModal} type="button">
+              Cancel
+            </Button>
+            <Button onClick={handleReplySubmit} disabled={isReplying}>
+              {isReplying ? 'Sending...' : 'Send reply'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
