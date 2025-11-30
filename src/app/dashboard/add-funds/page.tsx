@@ -19,26 +19,13 @@ export default function AddFunds() {
   const { user, token } = useAuth();
   
   const paymentOptions: Record<string, { label: string; description: string }> = {
-    binance: {
-      label: "Binance Pay",
-      description:
-        "Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%",
-    },
-    paypal: {
-      label: "PayPal",
-      description: "Secure PayPal integration",
-    },
-    stripe: {
-      label: "Stripe",
-      description: "Credit/Debit card payments",
-    },
     manual: {
       label: "Add Balance Manually",
       description: "Add balance directly to your account",
     },
   };
 
-  const [paymentMethod, setPaymentMethod] = useState<string>("binance");
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [manualBalance, setManualBalance] = useState("");
   const [currency, setCurrency] = useState<"BDT" | "USD">("BDT");
@@ -76,11 +63,7 @@ export default function AddFunds() {
   };
 
   const handleProceedToPayment = () => {
-    if (paymentMethod === "manual") {
-      setIsManualModalOpen(true);
-    } else {
-      console.log("Proceeding with payment method:", paymentMethod);
-    }
+    setIsManualModalOpen(true);
   };
 
   const fetchTransactionHistory = async () => {
@@ -201,7 +184,7 @@ export default function AddFunds() {
       });
       setIsManualModalOpen(false);
       setManualBalance("");
-      setPaymentMethod("binance");
+      setPaymentMethod("");
       setCurrency("BDT");
 
       if (typeof window !== "undefined") {
@@ -291,35 +274,30 @@ export default function AddFunds() {
                 <label className="text-lg font-semibold text-foreground block">Payment Method</label>
                 <Select value={paymentMethod} onValueChange={handlePaymentMethodChange}>
                   <SelectTrigger className="w-full max-w-full min-h-[48px] items-center py-2 px-3 bg-background border-border hover:border-primary/50 transition-colors">
-                      <div className="flex flex-col text-left w-full">
-                        <span className="font-semibold leading-5">
-                          {paymentOptions[paymentMethod]?.label}
-                        </span>
+                    <div className="flex flex-col text-left w-full">
+                      {paymentMethod ? (
+                        <>
+                          <span className="font-semibold leading-5">
+                            {paymentOptions[paymentMethod]?.label}
+                          </span>
                           <span className="text-sm text-muted-foreground leading-5 break-words">
                             {paymentOptions[paymentMethod]?.description}
                           </span>
-                      </div>
-                    </SelectTrigger>
+                        </>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Select payment method</span>
+                      )}
+                    </div>
+                  </SelectTrigger>
                   <SelectContent className="bg-popover">
-                    <SelectItem value="binance" className="py-3">
-                      <div className="flex flex-col">
-                          <span className="font-semibold">Binance Pay</span>
-                          <span className="text-sm text-muted-foreground break-words">Min: $5 | Bonus: $1-99 5% | $100+ 6% | $500+ 7% | $1000+ 10%</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="paypal" className="py-3">
-                      <div className="flex flex-col">
-                          <span className="font-semibold">PayPal</span>
-                          <span className="text-sm text-muted-foreground break-words">Secure PayPal integration</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="stripe" className="py-3">
-                      <div className="flex flex-col">
-                          <span className="font-semibold">Stripe</span>
-                          <span className="text-sm text-muted-foreground break-words">Credit/Debit card payments</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="manual" className="py-3">
+                    <SelectItem
+                      value="manual"
+                      className="py-3"
+                      onClick={() => {
+                        setPaymentMethod("manual");
+                        setIsManualModalOpen(true);
+                      }}
+                    >
                       <div className="flex flex-col">
                           <span className="font-semibold flex items-center gap-2">
                             <Plus className="h-4 w-4" />
@@ -500,7 +478,7 @@ export default function AddFunds() {
           setIsManualModalOpen(open);
           if (!open) {
             setManualBalance("");
-            setPaymentMethod("binance"); // Reset to default payment method
+              setPaymentMethod(""); // Reset to default payment method
             setCurrency("BDT");
           }
         }}
@@ -578,7 +556,7 @@ export default function AddFunds() {
               onClick={() => {
                 setIsManualModalOpen(false);
                 setManualBalance("");
-                setPaymentMethod("binance");
+                setPaymentMethod("");
                 setCurrency("BDT");
               }}
               disabled={isProcessingPayment}
