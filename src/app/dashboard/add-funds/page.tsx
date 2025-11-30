@@ -379,7 +379,7 @@ export default function AddFunds() {
                         {transactions.map((t) => (
                           <TableRow key={t._id}>
                             <TableCell className="capitalize">{t.type}</TableCell>
-                            <TableCell className={`font-semibold ${t.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>{t.amount >= 0 ? '+' : ''}${t.amount.toFixed(6)}</TableCell>
+                            <TableCell className={`font-semibold ${t.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>{t.amount >= 0 ? '+' : ''}৳{t.amount.toFixed(6)}</TableCell>
                             <TableCell className="max-w-md">
                               <TooltipProvider>
                                 <Tooltip>
