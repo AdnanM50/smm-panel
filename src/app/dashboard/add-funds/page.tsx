@@ -265,7 +265,7 @@ export default function AddFunds() {
       <div className="grid gap-8 lg:grid-cols-3">
   <Card className="w-full lg:col-span-2 p-6 sm:p-8 bg-gradient-card h-fit border-border glow-on-hover overflow-hidden">
           <Tabs defaultValue="add" className="w-full" onValueChange={setTabValue}>
-              <TabsList className="mood-tabs flex flex-row flex-nowrap items-center gap-3 mb-4 sm:mb-8 w-full overflow-x-auto py-1">
+              <TabsList className="mood-tabs flex flex-row flex-nowrap items-center gap-3 mb-4 sm:mb-8 w-full overflow-x-auto scrollbar-hide py-1">
                 <TabsTrigger value="add" className="mood-tab-trigger !py-3 flex items-center justify-center w-auto min-w-0 px-3  text-sm rounded-full">
                   <DollarSign className="mr-2 h-5 w-5" />
                   <span className="font-semibold truncate">Add Balance</span>
@@ -384,7 +384,7 @@ export default function AddFunds() {
                 </div>
               ) : (
                 <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto scrollbar-hide">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/50">
