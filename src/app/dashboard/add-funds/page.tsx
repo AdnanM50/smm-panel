@@ -2,11 +2,8 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Wallet, DollarSign, TrendingUp, Info, Sparkles, Zap, Star, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +11,8 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TickitModal } from "@/components/tickit-modal";
+import { fetchTransactionHistory as fetchTransactionHistoryApi, initiatePayment, verifyPayment } from "./tickit-api";
 
 export default function AddFunds() {
   const { user, token } = useAuth();
@@ -30,7 +29,6 @@ export default function AddFunds() {
   const [manualBalance, setManualBalance] = useState("");
   const [currency, setCurrency] = useState<"BDT" | "USD">("BDT");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://smm-panel-khan-it.up.railway.app/api";
   const USD_TO_BDT_RATE = 122.27;
   const numericManualAmount = Number(manualBalance);
   const isManualAmountValid = !Number.isNaN(numericManualAmount) && numericManualAmount > 0;
@@ -40,6 +38,7 @@ export default function AddFunds() {
       : numericManualAmount
     : 0;
   const currentBalance = user?.balance || 0;
+  const projectedBalance = isManualAmountValid ? currentBalance + numericManualAmount : currentBalance;
   const [tabValue, setTabValue] = useState<string>("add");
 
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
@@ -71,22 +70,13 @@ export default function AddFunds() {
     setIsHistoryLoading(true);
     setHistoryError(null);
     try {
-      const res = await fetch('https://smm-panel-khan-it.up.railway.app/api/viewTransactionHistory', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(typeof window !== 'undefined' && localStorage.getItem('auth_token') ? { token: String(localStorage.getItem('auth_token')) } : {}),
-        },
-        next: { revalidate: 60 },
-      });
-      const data = await res.json();
-      if (res.ok && data?.status === 'Success' && Array.isArray(data.data)) {
-        setTransactions(data.data);
-      } else {
-        setHistoryError(data?.message || 'Failed to load transaction history');
-      }
-    } catch (e) {
-      setHistoryError('Network error while loading history');
+      const authToken =
+        token ||
+        (typeof window !== "undefined" ? localStorage.getItem("auth_token") : null);
+      const history = await fetchTransactionHistoryApi({ token: authToken });
+      setTransactions(history);
+    } catch (error) {
+      setHistoryError((error as Error).message || "Network error while loading history");
     } finally {
       setIsHistoryLoading(false);
     }
@@ -98,8 +88,6 @@ export default function AddFunds() {
     }
   }, [tabValue]);
 
-  // When the payment gateway redirects back it may include a `transactionId` query param.
-  // If present, call the verifyPayment endpoint to confirm and credit the user's account.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -107,34 +95,19 @@ export default function AddFunds() {
       const txId = params.get('transactionId') || params.get('transaction_id');
       if (!txId) return;
 
-      // Prevent duplicate calls on re-render or navigation
       if ((window as any).__smm_verify_tx_called === txId) return;
       (window as any).__smm_verify_tx_called = txId;
 
       (async () => {
         const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null);
         try {
-          const res = await fetch(`${API_BASE_URL}/verifyPayment?transactionId=${encodeURIComponent(txId)}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(authToken ? { token: String(authToken) } : {}),
-            },
-          });
-          let data: any = null;
-          try {
-            data = await res.json();
-          } catch (e) {
-            console.warn('verifyPayment parse failed', e);
-          }
-
-          if (res.ok && (data?.status === 'Success' || data?.success || data?.status === 'success')) {
-            toast.success('Payment verified', { description: data?.message || 'Your payment was successful and your balance has been updated.' });
+          const result = await verifyPayment({ transactionId: txId, token: authToken });
+          if (result.success) {
+            toast.success('Payment verified', { description: result.payload?.message || 'Your payment was successful and your balance has been updated.' });
             // Refresh transaction history if user is on history tab
             fetchTransactionHistory();
           } else {
-            const msg = data?.message || data?.error || `Verification failed (${res.status})`;
-            toast.error('Payment verification failed', { description: msg });
+            toast.error('Payment verification failed', { description: result.message || 'Unable to verify payment.' });
           }
         } catch (error) {
           toast.error('Network error verifying payment', { description: (error as Error).message || 'Please try again later.' });
@@ -160,24 +133,10 @@ export default function AddFunds() {
     setIsProcessingPayment(true);
     try {
       const authToken = token || (typeof window !== "undefined" ? localStorage.getItem("auth_token") : null);
-      const response = await fetch(`${API_BASE_URL}/initiatePayment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authToken ? { token: authToken } : {}),
-        },
-        body: JSON.stringify({ amount: Number(amountForRequest.toFixed(2)) }),
+      const { paymentUrl } = await initiatePayment({
+        amount: Number(amountForRequest.toFixed(2)),
+        token: authToken,
       });
-      let data: any = null;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.warn("initiatePayment response parse failed", jsonError);
-      }
-      if (!response.ok || !data?.payment_url) {
-        const message = data?.message || data?.error || `Server responded with ${response.status}`;
-        throw new Error(message);
-      }
 
       toast.success("Redirecting to payment gateway", {
         description: "You will be redirected shortly to complete the payment.",
@@ -188,7 +147,7 @@ export default function AddFunds() {
       setCurrency("BDT");
 
       if (typeof window !== "undefined") {
-        window.location.assign(data.payment_url);
+        window.location.assign(paymentUrl);
       }
     } catch (error) {
       toast.error("Payment Failed", {
@@ -201,7 +160,7 @@ export default function AddFunds() {
 
   return (
     <div className="mass-order w-full overflow-x-hidden space-y-8 max-w-6xl mx-auto px-4 sm:px-6 lg:px-0">
-      {/* Hero section - identical structure/classes to Mass Order */}
+
       <div className="text-center space-y-4">
         <div className="mo-hero">
           <div className="mo-hero-icon">
@@ -214,7 +173,7 @@ export default function AddFunds() {
         </p>
       </div>
 
-      {/* Main gradient card - same class as Mass Order */}
+
   <Card className="mo-card w-full p-6 sm:p-8 relative overflow-hidden">
     <div className="hidden sm:block absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="hidden sm:block absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
@@ -471,119 +430,35 @@ export default function AddFunds() {
         </div>
       </div>
 
-      {/* Manual Balance Modal */}
-      <Dialog 
-        open={isManualModalOpen} 
+      <TickitModal
+        open={isManualModalOpen}
         onOpenChange={(open) => {
           setIsManualModalOpen(open);
           if (!open) {
             setManualBalance("");
-              setPaymentMethod(""); 
+            setPaymentMethod("");
             setCurrency("BDT");
           }
         }}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Add Balance Manually
-            </DialogTitle>
-            <DialogDescription>
-              Enter the amount you want to add to your account balance.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-              <Label htmlFor="balance" className="text-right">
-                Amount 
-              </Label>
-              <Input
-                id="balance"
-                type="number"
-                placeholder="0.00"
-                value={manualBalance}
-                onChange={(e) => setManualBalance(e.target.value)}
-                className="col-span-3"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-              <Label htmlFor="currency" className="text-right">
-                Currency
-              </Label>
-              <div className="col-span-3">
-                <Select
-                  value={currency}
-                  onValueChange={(value) => setCurrency(value as "BDT" | "USD")}
-                >
-                  <SelectTrigger className="w-full min-h-[48px] py-2 px-3">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover">
-                    <SelectItem value="BDT">BDT</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {isManualAmountValid && (
-              <div className="rounded-lg border border-border/40 bg-muted/20 p-3 text-sm text-muted-foreground">
-                Equivalent: <span className="font-semibold text-foreground">BDT {amountInBdt.toFixed(2)}</span>
-                {currency === "USD" && (
-                  <span className="text-xs text-muted-foreground ml-2">(1 USD = 122.27 BDT)</span>
-                )}
-              </div>
-            )}
-            {user && (
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">
-                  Current Balance: <span className="font-semibold text-foreground">${currentBalance.toFixed(2)}</span>
-                </p>
-                {isManualAmountValid && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    New Balance: <span className="font-semibold text-success">${(currentBalance + numericManualAmount).toFixed(2)}</span>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setIsManualModalOpen(false);
-                setManualBalance("");
-                setPaymentMethod("");
-                setCurrency("BDT");
-              }}
-              disabled={isProcessingPayment}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleManualBalanceUpdate}
-              disabled={isProcessingPayment || !isManualAmountValid}
-              className="bg-gradient-primary"
-            >
-              {isProcessingPayment ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Initiating Payment...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Balance
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        manualBalance={manualBalance}
+        onManualBalanceChange={setManualBalance}
+        currency={currency}
+        onCurrencyChange={setCurrency}
+        isManualAmountValid={isManualAmountValid}
+        amountInBdt={amountInBdt}
+        usdToBdtRate={USD_TO_BDT_RATE}
+        showUserSummary={Boolean(user)}
+        currentBalance={currentBalance}
+        projectedBalance={projectedBalance}
+        isProcessingPayment={isProcessingPayment}
+        onCancel={() => {
+          setIsManualModalOpen(false);
+          setManualBalance("");
+          setPaymentMethod("");
+          setCurrency("BDT");
+        }}
+        onSubmit={handleManualBalanceUpdate}
+      />
     </div>
   );
 }
