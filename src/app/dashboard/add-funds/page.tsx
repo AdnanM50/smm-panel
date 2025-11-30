@@ -478,7 +478,7 @@ export default function AddFunds() {
           setIsManualModalOpen(open);
           if (!open) {
             setManualBalance("");
-              setPaymentMethod(""); // Reset to default payment method
+              setPaymentMethod(""); 
             setCurrency("BDT");
           }
         }}
@@ -496,7 +496,7 @@ export default function AddFunds() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
               <Label htmlFor="balance" className="text-right">
-                Amount ($)
+                Amount 
               </Label>
               <Input
                 id="balance"
