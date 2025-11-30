@@ -318,7 +318,7 @@ export default function AddFunds() {
                   <div>
                     <p className="text-lg font-semibold text-foreground mb-2">Important Instructions</p>
                     <div className="space-y-1 text-muted-foreground">
-                      <p>• Minimum deposit: $100</p>
+                      <p>• Minimum deposit: ৳ 11</p>
                       <p>• Processing time: Instant to 24 hours</p>
                       <p>• All transactions are secure and encrypted</p>
                     </div>
