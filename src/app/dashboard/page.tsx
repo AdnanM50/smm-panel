@@ -236,9 +236,9 @@ const totalSpent = user?.totalSpent ?? 0
       const id = Number(svcParam)
       if (isNaN(id)) return
       try {
-        const all = await fetchServicesGradually({ profit: 10, maxPages: 6, limit: 100, token: token || undefined })
+        const candidates = await fetchAndCache({ query: svcParam, platform: 'All' })
         if (cancelled) return
-        const found = all.find(s => s.service === id)
+        const found = candidates.find((s) => s.service === id)
         if (found) {
           setSelectedService(found)
           setSearchQuery(found.name)
@@ -255,7 +255,7 @@ const totalSpent = user?.totalSpent ?? 0
       }
     })()
     return () => { cancelled = true }
-  }, [searchParams, token, router])
+  }, [searchParams, fetchAndCache, router])
 
   // Mass order handlers (kept mostly as-is but using helpers)
   const updateMoOrdersAndProfit = useCallback(async (inputValue: string) => {
