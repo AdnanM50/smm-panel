@@ -1,6 +1,6 @@
 import { getUserOrders } from '@/app/dashboard/orders/order-api'
 
-const API_BASE_URL = 'https://smm-panel-khan-it.up.railway.app/api'
+const API_BASE_URL = 'https://smm-panel-khan-it.vercel.app/api'
 
 export interface CreateTicketPayload {
   subject: string

@@ -1,6 +1,6 @@
 const DEFAULT_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://smm-panel-khan-it.up.railway.app/api";
+  "https://smm-panel-khan-it.vercel.app/api";
 
 const buildHeaders = (token?: string) => ({
   "Content-Type": "application/json",

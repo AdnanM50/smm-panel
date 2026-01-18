@@ -22,7 +22,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 
-const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
+const API_BASE_URL = "https://smm-panel-khan-it.vercel.app/api"
 
 type User = {
   _id: string

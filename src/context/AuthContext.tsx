@@ -45,7 +45,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api";
+const API_BASE_URL = "https://smm-panel-khan-it.vercel.app/api";
 
 // --- caching utils ---
 const apiCache = new Map<string, { data: any; timestamp: number }>();

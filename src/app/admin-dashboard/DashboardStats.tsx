@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api";
+const API_BASE_URL = "https://smm-panel-khan-it.vercel.app/api";
 
 type DashboardData = {
   balance: number;

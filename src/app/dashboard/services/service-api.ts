@@ -27,7 +27,7 @@ export interface ServicesResponse {
   services: ApiServiceItem[]
 }
 
-const DEFAULT_API_BASE_URL = 'https://smm-panel-khan-it.up.railway.app/api'
+const DEFAULT_API_BASE_URL = 'https://smm-panel-khan-it.vercel.app/api'
 
 // In-memory cache for per-page results across client navigations
 // Keyed by `${profit}:${page}:${limit}` (token intentionally excluded)

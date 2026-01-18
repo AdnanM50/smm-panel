@@ -5,7 +5,7 @@ import PaymentStatusIcon from "@/components/animated/PaymentStatusIcon";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://smm-panel-khan-it.up.railway.app/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://smm-panel-khan-it.vercel.app/api";
 type VerifyStatus = "idle" | "loading" | "success" | "error";
 
 export default function Page() {

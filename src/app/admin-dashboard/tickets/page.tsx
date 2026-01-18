@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Search, Eye, MessageSquare, Filter, Download, RefreshCw, X, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 
-const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
+const API_BASE_URL = "https://smm-panel-khan-it.vercel.app/api"
 
 type TicketReply = {
   _id?: string

@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/context/AuthContext"
 import { toast } from "@/hooks/use-toster"
 
-const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
+const API_BASE_URL = "https://smm-panel-khan-it.vercel.app/api"
 
 type RefillItem = {
   refillId: string

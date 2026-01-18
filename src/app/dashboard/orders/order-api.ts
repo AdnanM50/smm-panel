@@ -26,7 +26,7 @@ export interface CancelOrdersResponse {
   data?: any
 }
 
-const API_BASE_URL = 'https://smm-panel-khan-it.up.railway.app/api'
+const API_BASE_URL = 'https://smm-panel-khan-it.vercel.app/api'
 
 export async function getUserOrders(token: string): Promise<Order[]> {
   try {

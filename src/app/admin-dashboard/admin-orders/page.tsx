@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/context/AuthContext"
 import { Input } from "@/components/ui/input"
 
-const API_BASE_URL = "https://smm-panel-khan-it.up.railway.app/api"
+const API_BASE_URL = "https://smm-panel-khan-it.vercel.app/api"
 
 type AdminOrder = {
   _id: string
